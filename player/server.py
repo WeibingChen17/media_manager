@@ -6,10 +6,10 @@ from subprocess import call
 from protocol import PlayerProtocol
 
 HOST = "127.0.0.1"
-PORT = 65000
 
-def dispatch(path_string):
-    target = path_string
+# will be replaced by another server
+def dispatch(path):
+    target = path
     if target.endswith("pdf"):
         call(["evince", target])
     elif target.endswith("jpg") or target.endswith("jpeg") or target.endswith("png") or target.endswith("gif"):
@@ -17,56 +17,75 @@ def dispatch(path_string):
     else:
         call(["mpv", "--no-terminal", "--ontop", target])
 
+# will be replaced by another server
 def play(byte):
-    path_string = byte.decode("utf8")
-    if os.path.exists(path_string):
-        print("forwarding to app for playing ", path_string)
-        dispatch(path_string)
-        return b"success"
+    path = byte.decode("utf8")
+    if os.path.exists(path):
+        print("forwarding to app for playing ", path)
+        thread = threading.Thread(target=dispatch, args=(path,))
+        thread.start()
+        return b"succeed"
     else:
-        print("Could not find path ", path_string)
+        print("Could not find path", path)
         return b"fail"
-
 
 class PlayerServer:
     def __init__(self):
-        self.host = HOST
-        self.port = PORT
-        self.socket = None
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        self.socket.bind((HOST, 0))
+        self.host, self.port = self.socket.getsockname()
+        print("PlayerServer is listening on {}:{}".format(self.host, self.port))
 
-    def run(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as self.socket:
-            self.socket.bind((self.host, self.port))
-            print("listening on {}:{}".format(self.host, self.port))
+    def __del__(self):
+        self.socket.close()
+
+    def get_host(self):
+        return self.host
+
+    def get_port(self):
+        return self.port
+
+    def start(self):
+        self.thread = threading.Thread(target=self.__run, args=())
+        self.thread.start()
+
+    def __run(self):
+        t = threading.currentThread()
+        while getattr(t, "do_run", True):
             self.socket.listen()
-            while True:
-                self.serve()
-    
-    def serve(self):
-        conn, addr = self.socket.accept()
-        this_data = []
-        with conn:
-            print("Connected by", addr)
-            data = conn.recv(1024)
-            if not data:
-                return
-            length, data = PlayerProtocol.decode(data)
-            totalLength = length
-            this_data.append(data)
-            print("Receive {} bytes".format(len(data)))
-            while length - len(data) > 0:
-                length -= len(data)
+            conn, addr = self.socket.accept()
+            received_data = []
+            with conn:
+                print("Connected by", addr)
                 data = conn.recv(1024)
+                if not data:
+                    break
+                length, data = PlayerProtocol.decode(data)
+                totalLength = length
+                received_data.append(data)
                 print("Receive {} bytes".format(len(data)))
-                this_data.append(data)
-            this_data = b''.join(this_data)
-            print("Receive {} bytes in total".format(len(this_data)))
-            assert(len(this_data) == totalLength)
-            conn.send(play(this_data))
+                while length - len(data) > 0:
+                    length -= len(data)
+                    data = conn.recv(1024)
+                    print("Receive {} bytes".format(len(data)))
+                    received_data.append(data)
+                received_data = b''.join(received_data)
+                print("Receive {} bytes in total".format(len(received_data)))
+                assert(len(received_data) == totalLength)
+                status = play(received_data)
+                conn.send(PlayerProtocol.encode(status))
 
+    def stop(self):
+        self.thread.do_run = False
+        self.thread.join()
+
+    
 def main():
-    playerServer = PlayerServer()
-    playerServer.run()
+    try:
+        playerServer = PlayerServer()
+        playerServer.start()
+    finally:
+        playerServer.stop()
 
 if __name__ == "__main__":
     main()
