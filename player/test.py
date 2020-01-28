@@ -16,4 +16,6 @@ time.sleep(1)
 status = client.play("/home/weibing/a.mp4")
 assert(status == "succeed")
 
+time.sleep(1)
+
 server.stop()
