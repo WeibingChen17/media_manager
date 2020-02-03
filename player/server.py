@@ -3,7 +3,7 @@ import threading
 import os
 from subprocess import call
 
-from protocol import StringProtocol
+from .protocol import StringProtocol
 
 HOST = "127.0.0.1"
 
@@ -82,13 +82,3 @@ class PlayerServer:
         ending_socket.close()
         self.thread.join()
 
-    
-def main():
-    try:
-        playerServer = PlayerServer()
-        playerServer.start()
-    finally:
-        playerServer.stop()
-
-if __name__ == "__main__":
-    main()

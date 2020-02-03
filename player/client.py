@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 import socket
-from protocol import StringProtocol
+from .protocol import StringProtocol
 
 class PlayerClient:
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
+    def __init__(self, playerServer):
+        self.host = playerServer.get_host()
+        self.port = playerServer.get_port()
 
     def __del__(self):
         self.socket.close()
@@ -15,7 +15,7 @@ class PlayerClient:
         self.socket.connect((self.host, self.port))
         print("PlayerClient is connecting to {}:{}".format(self.host, self.port))
         print("Sending ", path)
-        self.socket.send(StringProtocol.encode(path.encode("utf8")))
+        self.socket.sendall(StringProtocol.encode(path.encode("utf8")))
         length, status = StringProtocol.decode(self.socket.recv(1024))
         assert(length == len(status))
         self.socket.close()

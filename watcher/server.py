@@ -2,22 +2,39 @@ import os
 import time
 import socket
 import threading
+
 from watchdog.observers import Observer
-from media_file_event_handler import MediaFileEventHandler
-from protocol import StringProtocol
+from watchdog.events import RegexMatchingEventHandler
+
+from .protocol import StringProtocol
 
 HOST = "127.0.0.1"
 
-def monitor(path):
-    observer = Observer()
-    observer.schedule(MediaFileEventHandler(), path, recursive=True)
-    observer.start()
-    t = threading.currentThread();
-    while getattr(t, "do_run", True):
-        time.sleep(1)
-    observer.stop()
-    observer.join()
-    print("Stop watching ", path)
+class MediaFileEventHandler(RegexMatchingEventHandler):
+    MEDIA_REGEX = [r".*\.mp4", r".*\.flv", r".*\.webm", r".*\.jpeg", r".*\.gif", r".*\.png", r".*\.jpg"]
+
+    def __init__(self):
+        super().__init__(self.MEDIA_REGEX)
+        self.indexerClient = None
+
+    def on_created(self, event):
+        print("file {} is created".format(event.src_path))
+        if self.indexerClient:
+            self.indexerClient.index_file(event.src_path, "create")
+
+    def on_moved(self, event):
+        print("file {} is moved to {}".format(event.src_path, event.dest_path))
+        if self.indexerClient:
+            self.indexerClient.index_file(event.src_path, "move", event.dest_path)
+
+    def on_deleted(self, event):
+        print("file {} is deleted".format(event.src_path))
+        if self.indexerClient:
+            self.indexerClient.index_file(event.src_path, "delete")
+
+    def on_modified(self, event):
+        print("file {} is modified".format(event.src_path))
+
 
 class MediaWatcherServer:
     def __init__(self):
@@ -26,6 +43,8 @@ class MediaWatcherServer:
         self.host, self.port = self.socket.getsockname()
         self.watchedFolder = []
         self.subthreads = []
+        self.indexer = None
+        self.mediaFileEventHandler = None
         print("MediaWatcher is listening on {}:{}".format(self.host, self.port))
 
     def __del__(self):
@@ -39,6 +58,9 @@ class MediaWatcherServer:
 
     def get_watched_folder():
         return self.watchedFolder
+
+    def set_indexer(self, host, port):
+        pass
 
     def start(self):
         self.thread = threading.Thread(target=self.__run, args=())
@@ -77,13 +99,24 @@ class MediaWatcherServer:
             # (todo) avoid duplicate
             self.watchedFolder.append(path)
             print("Watching folder ", path)
-            thread = threading.Thread(target=monitor, args=(path,), name=path)
+            thread = threading.Thread(target=self.monitor, args=(path,), name=path)
             self.subthreads.append(thread)
             thread.start()
             return b"succeed"
         else:
             print("Could not find path", path)
             return b"fail"
+
+    def monitor(self, path):
+        observer = Observer()
+        observer.schedule(self.mediaFileEventHandler, path, recursive=True)
+        observer.start()
+        t = threading.currentThread();
+        while getattr(t, "do_run", True):
+            time.sleep(1)
+        observer.stop()
+        observer.join()
+        print("Stop watching ", path)
 
     def stop(self):
         for thread in self.subthreads:
@@ -99,12 +132,3 @@ class MediaWatcherServer:
         print("Main thread stops")
         print("MediaWatcherServer stops")
 
-def main():
-    try:
-        mediaWatcherServer = MediaWatcherServer()
-        mediaWatcherServer.start()
-    finally:
-        mediaWatcherServer.stop()
-
-if __name__ == "__main__":
-    main()
