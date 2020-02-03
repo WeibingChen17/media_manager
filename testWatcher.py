@@ -1,6 +1,7 @@
 import os
 import time
 import shutil
+
 from watcher.client import MediaWatcherClient
 from watcher.server import MediaWatcherServer
 

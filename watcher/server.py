@@ -1,12 +1,14 @@
 import os
 import time
+import json
 import socket
 import threading
 
 from watchdog.observers import Observer
 from watchdog.events import RegexMatchingEventHandler
 
-from .protocol import StringProtocol
+from indexer.client import IndexerClient
+from shared.protocol import StringProtocol
 
 HOST = "127.0.0.1"
 
@@ -16,6 +18,9 @@ class MediaFileEventHandler(RegexMatchingEventHandler):
     def __init__(self):
         super().__init__(self.MEDIA_REGEX)
         self.indexerClient = None
+
+    def set_indexer(self, indexer):
+        self.indexerClient = indexer
 
     def on_created(self, event):
         print("file {} is created".format(event.src_path))
@@ -43,8 +48,8 @@ class MediaWatcherServer:
         self.host, self.port = self.socket.getsockname()
         self.watchedFolder = []
         self.subthreads = []
-        self.indexer = None
-        self.mediaFileEventHandler = None
+        self.indexer = IndexerClient()
+        self.mediaFileEventHandler = MediaFileEventHandler()
         print("MediaWatcher is listening on {}:{}".format(self.host, self.port))
 
     def __del__(self):
@@ -60,7 +65,11 @@ class MediaWatcherServer:
         return self.watchedFolder
 
     def set_indexer(self, host, port):
-        pass
+        self.indexer.set_host(host)
+        self.indexer.set_port(port)
+        self.mediaFileEventHandler.set_indexer(self.indexer)
+        print("Use indexer", self.indexer)
+        return "succeed"
 
     def start(self):
         self.thread = threading.Thread(target=self.__run, args=())
@@ -90,11 +99,17 @@ class MediaWatcherServer:
                 received_data = b''.join(received_data)
                 print("Receive {} bytes in total".format(len(received_data)))
                 assert(len(received_data) == totalLength)
-                status = self.watch(received_data)
-                conn.send(StringProtocol.encode(status))
+                status = self.dispatch(received_data)
+                conn.send(StringProtocol.encode(status.encode("utf8")))
 
-    def watch(self, byte):
-        path = byte.decode("utf8")
+    def dispatch(self, byte):
+        data = json.loads(byte.decode("utf8"))
+        if data["reason"] == "indexer":
+            return self.set_indexer(data["host"], data["port"])
+        elif data["reason"] == "watch":
+            return self.watch(data["path"])
+
+    def watch(self, path):
         if os.path.exists(path):
             # (todo) avoid duplicate
             self.watchedFolder.append(path)
@@ -102,10 +117,10 @@ class MediaWatcherServer:
             thread = threading.Thread(target=self.monitor, args=(path,), name=path)
             self.subthreads.append(thread)
             thread.start()
-            return b"succeed"
+            return "succeed"
         else:
             print("Could not find path", path)
-            return b"fail"
+            return "fail"
 
     def monitor(self, path):
         observer = Observer()

@@ -3,7 +3,7 @@ import threading
 import os
 from subprocess import call
 
-from .protocol import StringProtocol
+from shared.protocol import StringProtocol
 
 HOST = "127.0.0.1"
 

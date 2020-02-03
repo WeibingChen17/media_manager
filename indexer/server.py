@@ -6,7 +6,7 @@ import hashlib
 
 import pymongo
 
-from indexer.protocol import StringProtocol
+from shared.protocol import StringProtocol
 
 HOST = "127.0.0.1"
 
