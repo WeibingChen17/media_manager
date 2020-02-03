@@ -119,6 +119,12 @@ class IndexerServer:
                 entry["disttributor"] = ""
                 entry["rating"] = "-1"
                 entry["tag"] = []
+                entry["designation"] = ""
+                # add size and duration
+                entry["name"] = []
+                entry["size"] = ""
+                entry["duration"] = ""
+                entry["type"] = "" # file type
                 self.col.insert_one(entry)
             else:
                 # same file: append the path
