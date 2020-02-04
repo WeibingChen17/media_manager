@@ -5,7 +5,7 @@ A small manager for media
 * ~~implement player~~
 * ~~implement watcher~~
 * ~~implement indexer~~
-* p0 - implement searcher
+* ~~p0 - implement searcher~~
 * p0 - implement updateer 
 * p1 - add __enter__ and __exit__ in all server to atuo close
 * p0 - implement server launcher
@@ -19,3 +19,7 @@ A small manager for media
 * p0 - embeded video player and image viewer
 * p0 - build web page on javascript 
 * p0 - launch html server
+
+# dependency
+* pymongo
+* filetype

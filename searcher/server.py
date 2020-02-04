@@ -95,7 +95,7 @@ class SearcherServer:
 
     def search(self, query):
         result = []
-        for entry in self.col.find(query, {'_id': 0}):
+        for entry in self.col.find(query):
             result.append(dict(entry))
         return result
         

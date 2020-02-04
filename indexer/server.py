@@ -5,6 +5,7 @@ import threading
 import hashlib
 
 import pymongo
+import filetype
 
 from shared.protocol import StringProtocol
 
@@ -117,25 +118,32 @@ class IndexerServer:
                 entry["director"] = ""
                 entry["maker"] = ""
                 entry["disttributor"] = ""
-                entry["rating"] = "-1"
+                entry["rating"] = "0"
                 entry["tag"] = []
                 entry["designation"] = ""
                 # add size and duration
-                entry["name"] = []
-                entry["size"] = ""
+                entry["name"] = [os.path.basename(file_path)]
+                entry["size"] = os.path.stat(file_path).st_size
+                entry["type"] = filetype.guess(file_path)
+                # todo: determine the best way of determinnig duration(ffprob)
                 entry["duration"] = ""
-                entry["type"] = "" # file type
                 self.col.insert_one(entry)
             else:
-                # same file: append the path
+                # the same file: append the path
                 self.col.update(md5_query, {'$push': {"path" : file_path}})
             return "succeed"
         elif reason == "move":
             if self.col.count_documents(path_query) == 0:
                 print("Ignore nonexisting file path")
                 return "succeed"
-            self.col.update(path_query, {'$push': {"path" : dest_path}})
-            self.col.update(path_query, {'$pull': {"path" : file_path}})
+            self.col.update(path_query, {
+                '$push': {"path" : dest_path}, 
+                '$push', {"name": os.path.basename(dest_path)}
+                })
+            self.col.update(path_query, {
+                '$pull': {"path" : file_path}
+                '$pull': {"name" : os.path.basename(file_path)}
+                })
             return "succeed"
         elif reason == "delete":
             if self.col.count_documents(path_query) == 0:
