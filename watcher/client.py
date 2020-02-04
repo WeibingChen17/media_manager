@@ -21,15 +21,15 @@ class MediaWatcherClient:
         self.port = port
 
     def watch(self, path):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.host, self.port))
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
         print("MediaWatcherClient is connecting to {}:{}".format(self.host, self.port))
         print("Sending", path)
         data = {"reason" : "watch", "path": path}
-        self.socket.sendall(StringProtocol.encode(json.dumps(data).encode("utf8")))
-        length, status = StringProtocol.decode(self.socket.recv(1024))
+        s.sendall(StringProtocol.encode(json.dumps(data).encode("utf8")))
+        length, status = StringProtocol.decode(s.recv(1024))
         assert(length == len(status))
-        self.socket.close()
+        s.close()
         return status.decode("utf8")
 
     def set_indexer(self, indexerClient):
