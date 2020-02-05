@@ -1,6 +1,9 @@
+import os
 import json
 import socket
 import threading
+
+from bson.objectid import ObjectId
 
 import pymongo
 
@@ -8,7 +11,7 @@ from shared.protocol import StringProtocol
 
 HOST = "127.0.0.1"
 
-class SearcherServer:
+class UpdaterServer:
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         self.socket.bind((HOST, 0))
@@ -16,7 +19,7 @@ class SearcherServer:
         self.client = pymongo.MongoClient("mongodb://localhost:27017/") 
         self.db = None
         self.col = None
-        print("SearcherServer is listening on {}:{}".format(self.host, self.port))
+        print("UpdaterServer is listening on {}:{}".format(self.host, self.port))
         print("Connect to mongodb://localhost:27017/")
         print("Database: None")
         print("Collection: None")
@@ -73,7 +76,7 @@ class SearcherServer:
                 print("Receive {} bytes in total".format(len(received_data)))
                 assert(len(received_data) == totalLength)
                 result = self.dispatch(received_data) 
-                conn.send(StringProtocol.encode(json.dumps(result).encode("utf8")))
+                conn.send(StringProtocol.encode(result.encode("utf8")))
 
     def stop(self):
         self.thread.do_run = False
@@ -88,16 +91,42 @@ class SearcherServer:
             return self.set_database(data["database"])
         elif data["reason"] == "set_collection":
             return self.set_collection(data["collection"])
-        elif data["reason"] == "search":
-            return self.search(data["query"])
+        elif data["reason"] == "update":
+            return self.update(data["doc_id"], data["query"])
         else:
             return "fail"
 
-    def search(self, query):
-        result = []
-        for entry in self.col.find(query):
-            e = dict(entry)
-            e["_id"] = str(e["_id"])
-            result.append(e)
-        return result
-        
+    def update(self, doc_id, query):
+        query_id = {"_id" : ObjectId(doc_id)}
+        for op in query:
+            if op == "add":
+                for field, value in query[op].items():
+                    print("adding  {} : {}".format(field, value))
+                    # assume it is an array
+                    self.col.update(query_id, {'$push' : {field : value}})
+            elif op == "remove":
+                for field, value in query[op].items():
+                    print("removing  {} : {}".format(field, value))
+                    # assume it is an array
+                    self.col.update(query_id, {'$pull' : {field : value}})
+            elif op == "change":
+                for field, value in query[op].items():
+                    print("chaning {} : {}".format(field, value))
+                    # assume it is not an array
+                    self.col.update(query_id, {'$set' : {field : value}})
+            elif op == "delete":
+                if self.col.find_one(query_id).get("path"):
+                    for path in self.col.find_one(query_id).get("path"):
+                        if os.path.exists(path):
+                            print("File {} is deleted".format(path))
+                            os.remove(path)
+                print("deleting record {}".format(doc_id))
+                self.col.delete_one(query_id)
+        # assume happy
+        return "succeed"
+
+                    
+
+
+
+
