@@ -10,13 +10,13 @@ def main():
 
     client = PlayerClient(server)
 
-    status = client.play("/home/weibing/b.mp4")
-    assert(status == "fail")
+    response = client.play("/home/weibing/b.mp4")
+    assert(response["status"] == "fail")
 
     time.sleep(1)
 
-    status = client.play("/home/weibing/a.mp4")
-    assert(status == "succeed")
+    response = client.play("/home/weibing/a.mp4")
+    assert(response["status"] == "succeed")
 
     time.sleep(1)
 

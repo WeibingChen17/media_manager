@@ -1,23 +1,15 @@
-#!/usr/bin/python3
+import os
 import socket
-from shared.protocol import StringProtocol
 
-class PlayerClient:
-    def __init__(self, playerServer):
-        self.host = playerServer.get_host()
-        self.port = playerServer.get_port()
+from shared.jsonclient import JsonClient
+from shared.protocol import SUCCEED_CODE
+from shared.protocol import FAIL_CODE
 
-    def __repr__(self):
-        return "PlayerClient [host : {}, port : {}]".format(self.host, self.port)
+class PlayerClient(JsonClient):
 
     def play(self, path):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.host, self.port))
-        print("PlayerClient is connecting to {}:{}".format(self.host, self.port))
-        print("Sending ", path)
-        s.sendall(StringProtocol.encode(path.encode("utf8")))
-        length, status = StringProtocol.decode(s.recv(1024))
-        assert(length == len(status))
-        s.close()
-        return status.decode("utf8")
+        if not os.path.exists(path):
+            return FAIL_CODE
+        data = {"reason" : "play", "path" : path}
+        return self._send(data)
 
