@@ -14,16 +14,17 @@ class JsonServer:
         self.host, self.port = self.socket.getsockname()
         self.log("Listening on {}:{}".format(self.host, self.port))
 
-    def log(self, string):
-        log_print(str(self), string)
-
     def __repr__(self):
         return "{}[{}:{}]".format(self.__class__.__name__, self.host, self.port)
 
     def __del__(self):
         self.socket.close()
 
-    def __exit__(self):
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
 
     def get_host(self):
@@ -31,6 +32,9 @@ class JsonServer:
 
     def get_port(self):
         return self.port
+
+    def log(self, string):
+        log_print(str(self), string)
 
     def start(self):
         self.thread = threading.Thread(target=self.__run, args=())

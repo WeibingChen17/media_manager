@@ -14,9 +14,6 @@ class JsonClient:
             self.host = json_server.get_host()
             self.port = json_server.get_port()
 
-    def log(self, string):
-        log_print(str(self), string)
-
     def __repr__(self):
         return "{}[server: {}:{}]".format(self.__class__.__name__, self.host, self.port)
 
@@ -25,6 +22,9 @@ class JsonClient:
 
     def set_prot(self, port):
         self.port = port
+
+    def log(self, string):
+        log_print(str(self), string)
 
     def _send(self, data):
         assert(isinstance(data, dict))

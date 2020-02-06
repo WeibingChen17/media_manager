@@ -5,22 +5,17 @@ from player.server import PlayerServer
 
 
 def main():
-    server = PlayerServer()
-    server.start()
+    with PlayerServer() as server:
+        client = PlayerClient(server)
 
-    client = PlayerClient(server)
+        response = client.play("/home/weibing/b.mp4")
+        assert(response["status"] == "fail")
 
-    response = client.play("/home/weibing/b.mp4")
-    assert(response["status"] == "fail")
+        time.sleep(1)
 
-    time.sleep(1)
+        response = client.play("/home/weibing/a.mp4")
+        assert(response["status"] == "succeed")
 
-    response = client.play("/home/weibing/a.mp4")
-    assert(response["status"] == "succeed")
-
-    time.sleep(1)
-
-    server.stop()
 
 if __name__ == "__main__":
     main()
