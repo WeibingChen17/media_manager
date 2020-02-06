@@ -20,24 +20,21 @@ class MediaWatcherClient:
     def set_port(self, port):
         self.port = port
 
-    def watch(self, path):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.host, self.port))
-        print("MediaWatcherClient is connecting to {}:{}".format(self.host, self.port))
-        print("Sending", path)
-        data = {"reason" : "watch", "path": path}
-        s.sendall(StringProtocol.encode(json.dumps(data).encode("utf8")))
-        length, status = StringProtocol.decode(s.recv(1024))
-        assert(length == len(status))
-        s.close()
-        return status.decode("utf8")
+    def set_database(self, database):
+        return self._send({"reason" : "set_database", "database" : database})
 
-    def set_indexer(self, indexerClient):
+    def set_collection(self, collection):
+        return self._send({"reason" : "set_collection", "collection" : collection})
+
+    def watch(self, path):
+        data = {"reason" : "watch", "path": path}
+        return self._send(data)
+
+    def _send(self, data):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         print("MediaWatcherClient is connecting to {}:{}".format(self.host, self.port))
-        print("Sending indexer", indexerClient)
-        data = {"reason" : "indexer", "host": indexerClient.get_host(), "port": indexerClient.get_port()}
+        print("Sending", data)
         s.sendall(StringProtocol.encode(json.dumps(data).encode("utf8")))
         length, status = StringProtocol.decode(s.recv(1024))
         assert(length == len(status))

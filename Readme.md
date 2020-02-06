@@ -6,7 +6,10 @@ A small manager for media
 * ~~implement watcher~~
 * ~~implement indexer~~
 * ~~p0 - implement searcher~~
-* p0 - implement updateer 
+* ~~p0 - implement updateer~~ 
+* p0 push indexer to watcher
+* p1 - JsonClient and JsonServer, JsonProtocol
+* p0 - remove the strong dependency in mongo
 * p1 - add __enter__ and __exit__ in all server to atuo close
 * p0 - implement server launcher
 * p0 - use server launcher for python cli. Use Cmd module
