@@ -13,13 +13,14 @@ A small manager for media
     * ~~JsonClient/Server with database~~
 * p0 - remove the strong dependency in mongo
 * ~~p1 - add __enter__ and __exit__ in all server to atuo close~~
-* p0 - implement server launcher
+* ~~p0 - implement server launcher~~
+* p0 - use logging 
 * p0 - use server launcher for python cli. Use Cmd module
 * p1 - design scheme for indexer
     * add duration and size 
 * p2 - refractor code
 * p1 - Exception handling
-* p2 - Keep client - server connection
+* p2 - Maintain client - server connection
 * p2 - multiple clients support
 
 # todo (phase 2)
@@ -28,7 +29,7 @@ A small manager for media
 * p0 - build web page on javascript 
 * p0 - launch html server
 
-# dependency
+# dependencies
 * pymongo
 * filetype
 * Daemonize

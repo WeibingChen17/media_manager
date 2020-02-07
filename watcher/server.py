@@ -117,7 +117,6 @@ class WatcherServer(JsonDataServer):
         self.subthreads = []
         self.indexer = None
         self.mediaFileEventHandler = MediaFileEventHandler()
-        self.log("Listening on {}:{}".format(self.host, self.port))
 
     def set_collection(self, collection):
         res = super().set_collection(collection)

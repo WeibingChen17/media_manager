@@ -4,11 +4,12 @@ from datetime import datetime
 
 from shared.protocol import SEGEMENT_1K
 from shared.protocol import log_print
+from shared.protocol import LOCALHOST
 from shared.protocol import JsonProtocol
 
 class JsonClient:
     def __init__(self, json_server=None):
-        self.host = None
+        self.host = LOCALHOST
         self.port = None
         if json_server:
             self.host = json_server.get_host()
@@ -20,7 +21,7 @@ class JsonClient:
     def set_host(self, host):
         self.host = host
 
-    def set_prot(self, port):
+    def set_port(self, port):
         self.port = port
 
     def log(self, string):
