@@ -31,3 +31,4 @@ A small manager for media
 # dependency
 * pymongo
 * filetype
+* Daemonize

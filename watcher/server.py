@@ -110,7 +110,7 @@ class MediaFileEventHandler(RegexMatchingEventHandler):
         print("file {} is modified".format(event.src_path))
 
 
-class MediaWatcherServer(JsonDataServer):
+class WatcherServer(JsonDataServer):
     def __init__(self):
         super().__init__()
         self.watchedFolder = []

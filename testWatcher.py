@@ -4,16 +4,15 @@ import shutil
 
 import pymongo
 
-from watcher.client import MediaWatcherClient
-from watcher.server import MediaWatcherServer
+from watcher.client import WatcherClient
+from watcher.server import WatcherServer
 
-mediaWatcherServer = MediaWatcherServer()
-with MediaWatcherServer() as mediaWatcherServer:
+with WatcherServer() as watcherServer:
 
-    mediaWatcherClient = MediaWatcherClient(mediaWatcherServer)
+    watcherClient = WatcherClient(watcherServer)
 
-    mediaWatcherClient.set_database("testDatabase")
-    mediaWatcherClient.set_collection("media_manager")
+    watcherClient.set_database("testDatabase")
+    watcherClient.set_collection("media_manager")
 
     myclient = pymongo.MongoClient("mongodb://localhost:27017/")
     mydb = myclient["testDatabase"]
@@ -31,7 +30,7 @@ with MediaWatcherServer() as mediaWatcherServer:
     with open(tmp_folder + "tet2.jpg", 'w') as f:
         f.write('aldsjfadfjasdf ad\nalkjdlfja')
 
-    mediaWatcherClient.watch(tmp_folder)
+    watcherClient.watch(tmp_folder)
     time.sleep(0.5)
     assert(mycol.count_documents({}) == 2)
 
