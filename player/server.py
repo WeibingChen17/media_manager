@@ -9,7 +9,7 @@ from shared.protocol import LOG_FORMAT
 class PlayerServer(JsonServer):
 
     def dispatch(self, data):
-        if data["reason"] == "play":
+        if data["service"] == "play":
             return self.play(data["path"])
         else:
             return FAIL_CODE

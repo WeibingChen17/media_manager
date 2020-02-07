@@ -45,3 +45,15 @@ class JsonClient:
         assert(len(received_data) == totalLength)
         s.close()
         return json.loads(received_data.decode("utf8"))
+
+
+class JsonDataClient(JsonClient):
+
+    def set_database(self, database):
+        assert(isinstance(database, str))
+        return self._send({"service" : "set_database", "database" : database})
+
+    def set_collection(self, collection):
+        assert(isinstance(collection, str))
+        return self._send({"service" : "set_collection", "collection" : collection})
+

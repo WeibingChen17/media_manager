@@ -10,9 +10,9 @@ import filetype
 from watchdog.observers import Observer
 from watchdog.events import RegexMatchingEventHandler
 
-from shared.protocol import StringProtocol
-
-HOST = "127.0.0.1"
+from shared.jsonserver import JsonDataServer
+from shared.protocol import SUCCEED_CODE
+from shared.protocol import FAIL_CODE
 
 class Indexer:
     def __init__(self, collection):
@@ -110,111 +110,48 @@ class MediaFileEventHandler(RegexMatchingEventHandler):
         print("file {} is modified".format(event.src_path))
 
 
-class MediaWatcherServer:
+class MediaWatcherServer(JsonDataServer):
     def __init__(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        self.socket.bind((HOST, 0))
-        self.host, self.port = self.socket.getsockname()
+        super().__init__()
         self.watchedFolder = []
         self.subthreads = []
-        self.client = pymongo.MongoClient("mongodb://localhost:27017/") 
         self.indexer = None
-        self.db = None
-        self.col = None
         self.mediaFileEventHandler = MediaFileEventHandler()
-        print("MediaWatcher is listening on {}:{}".format(self.host, self.port))
-
-    def __del__(self):
-        self.socket.close()
-
-    def get_host(self):
-        return self.host
-
-    def get_port(self):
-        return self.port
-
-    def set_database(self, database):
-        self.db = self.client[database]
-        print("Use Database {}".format(database))
-        return "succeed"
+        self.log("Listening on {}:{}".format(self.host, self.port))
 
     def set_collection(self, collection):
-        if not self.db:
-            raise Exception("No database is selected yet")
-        self.col = self.db[collection]
-        print("Use Collection {}".format(collection))
-        self.indexer = Indexer(self.col)
-        self.mediaFileEventHandler.set_indexer(self.indexer)
-        return "succeed"
+        res = super().set_collection(collection)
+        if res == SUCCEED_CODE:
+            self.indexer = Indexer(self.col)
+            self.mediaFileEventHandler.set_indexer(self.indexer)
+        return res
 
     def get_watched_folder():
         return self.watchedFolder
 
-    def set_indexer(self, host, port):
-        self.indexer.set_host(host)
-        self.indexer.set_port(port)
-        self.mediaFileEventHandler.set_indexer(self.indexer)
-        print("Use indexer", self.indexer)
-        return "succeed"
-
-    def start(self):
-        self.thread = threading.Thread(target=self.__run, args=())
-        self.thread.start()
-        print("MediaWatcherServer starts")
-
-    def __run(self):
-        t = threading.currentThread()
-        while getattr(t, "do_run", True):
-            self.socket.listen()
-            conn, addr = self.socket.accept()
-            received_data = []
-            with conn:
-                print("Connected by", addr)
-                data = conn.recv(1024)
-                if not data:
-                    break
-                length, data = StringProtocol.decode(data)
-                totalLength = length
-                received_data.append(data)
-                print("Receive {} bytes".format(len(data)))
-                while length - len(data) > 0:
-                    length -= len(data)
-                    data = conn.recv(1024)
-                    print("Receive {} bytes".format(len(data)))
-                    received_data.append(data)
-                received_data = b''.join(received_data)
-                print("Receive {} bytes in total".format(len(received_data)))
-                assert(len(received_data) == totalLength)
-                status = self.dispatch(received_data)
-                conn.send(StringProtocol.encode(status.encode("utf8")))
-
-    def dispatch(self, byte):
-        data = json.loads(byte.decode("utf8"))
-        if data["reason"] == "set_database":
-            return self.set_database(data["database"])
-        elif data["reason"] == "set_collection":
-            return self.set_collection(data["collection"])
-        elif data["reason"] == "indexer":
-            return self.set_indexer(data["host"], data["port"])
-        elif data["reason"] == "watch":
+    def dispatch(self, data):
+        self.predispatch(data)
+        if data["service"] == "watch":
             return self.watch(data["path"])
         else:
-            return "fail"
+            return FAIL_CODE
 
     def watch(self, path):
         if os.path.exists(path):
             # (todo) avoid duplicate
+            if path in self.watchedFolder:
+                return SUCCEED_CODE
             self.watchedFolder.append(path)
-            print("Indexing folder ", path)
+            self.log("Indexing folder " +  path)
             self.indexer.index_folder(path)
-            print("Watching folder ", path)
+            self.log("Watching folder " + path)
             thread = threading.Thread(target=self.monitor, args=(path,), name=path)
             self.subthreads.append(thread)
             thread.start()
-            return "succeed"
+            return SUCCEED_CODE
         else:
-            print("Could not find path", path)
-            return "fail"
+            self.log("Could not find path", path)
+            return FAIL_CODE
 
     def monitor(self, path):
         observer = Observer()
@@ -225,19 +162,13 @@ class MediaWatcherServer:
             time.sleep(1)
         observer.stop()
         observer.join()
-        print("Stop watching ", path)
+        self.log("Stop watching " + path)
 
     def stop(self):
         for thread in self.subthreads:
             thread.do_run = False
             thread.join()
-            print("Watching thread {} stops".format(thread.name))
-        print("All watching threads stops")
-        self.thread.do_run = False
-        ending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        ending_socket.connect((self.host, self.port))
-        ending_socket.close()
-        self.thread.join()
-        print("Main thread stops")
-        print("MediaWatcherServer stops")
+            self.log("Watching thread {} stops".format(thread.name))
+        self.log("All watching threads stops")
+        super().stop()
 
