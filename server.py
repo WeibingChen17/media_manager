@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 import socket
 from subprocess import call
 
@@ -54,7 +55,8 @@ def main():
     try:
         with MediaManagerServer() as mediaManagerServer:
             while True:
-                pass
+                # Sleep the main thread to reduce cpu usage
+                time.sleep(1000)
     except KeyboardInterrupt:
         pass
     except OSError:
@@ -74,6 +76,8 @@ if __name__ == '__main__':
         with open(pidfile, "r") as f:
             status = call(["kill", f.read()])
             print(status)
+    elif param == "status":
+        print("running" if os.path.exists(pidfile) else "stop")
     elif param == "test":
         main()
     

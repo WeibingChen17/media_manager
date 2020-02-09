@@ -23,6 +23,7 @@ A small manager for media
 * p1 - Exception handling
 * p2 - Maintain client - server connection
 * p2 - multiple clients support
+* p1 - enable server mode an1d module mode in jsonclient and jsonserver. This can decreases the number of servers we need
 
 # todo (phase 2)
 * p0 - use javascript to talk to servers
