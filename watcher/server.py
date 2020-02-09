@@ -14,19 +14,22 @@ from shared.jsonserver import JsonDataServer
 from shared.protocol import SUCCEED_CODE
 from shared.protocol import FAIL_CODE
 
+# merge these two
+MEDIA_SUFFIX = [".mp4", ".flv", ".webm", ".jpeg", ".gif", ".png", ".jpg"]
+MEDIA_REGEX = [r".*\.mp4", r".*\.flv", r".*\.webm", r".*\.jpeg", r".*\.gif", r".*\.png", r".*\.jpg"]
+
 class Indexer:
     def __init__(self, collection):
         self.col = collection
 
     def index_file(self, file_path, reason, dest_path=""):
-        path_query = {"path": file_path}
+        path_query = {"path" : file_path}
         if reason == "create":
             if self.col.count_documents(path_query) > 0:
                 print("Ignore an existing file path")
                 return "succeed"
             md5 = hashlib.md5(open(file_path, 'rb').read()).hexdigest()
             md5_query =  {"md5": md5}
-            doc = self.col.find(md5_query)
             if self.col.count_documents(md5_query) == 0:
                 # unique new file: create a new doc
                 entry = dict()
@@ -50,7 +53,7 @@ class Indexer:
             else:
                 # the same file: append the path
                 self.col.update(md5_query, {'$push': {"path" : file_path}})
-            return "succeed"
+            return SUCCEED_CODE
         elif reason == "move":
             if self.col.count_documents(path_query) == 0:
                 print("Ignore nonexisting file path")
@@ -63,29 +66,22 @@ class Indexer:
                 '$pull': {"path" : file_path},
                 '$pull': {"name" : os.path.basename(file_path)}
                 })
-            return "succeed"
+            return SUCCEED_CODE
         elif reason == "delete":
             if self.col.count_documents(path_query) == 0:
                 print("Ignore nonexisting file path")
                 return "succeed"
             self.col.update(path_query, {'$pull': {"path" : file_path}})
             self.col.delete_many({"path" : []})
-            return "succeed"
+            return SUCCEED_CODE
         else:
-            return "fail"
-
-    def index_folder(self, folder_path):
-        for dirpath, _, names in os.walk(folder_path):
-            for name in names:
-                self.index_file(os.path.join(dirpath, name), "create")
-        return "succeed"
+            return FAIL_CODE
 
 
 class MediaFileEventHandler(RegexMatchingEventHandler):
-    MEDIA_REGEX = [r".*\.mp4", r".*\.flv", r".*\.webm", r".*\.jpeg", r".*\.gif", r".*\.png", r".*\.jpg"]
 
     def __init__(self):
-        super().__init__(self.MEDIA_REGEX)
+        super().__init__(MEDIA_REGEX)
         self.indexer = None
 
     def set_indexer(self, indexer):
@@ -137,12 +133,12 @@ class WatcherServer(JsonDataServer):
 
     def watch(self, path):
         if os.path.exists(path):
-            # (todo) avoid duplicate
             if path in self.watchedFolder:
                 return SUCCEED_CODE
             self.watchedFolder.append(path)
-            self.log("Indexing folder " +  path)
-            self.indexer.index_folder(path)
+
+            self.index_media_folder(path)
+
             self.log("Watching folder " + path)
             thread = threading.Thread(target=self.monitor, args=(path,), name=path)
             self.subthreads.append(thread)
@@ -151,6 +147,17 @@ class WatcherServer(JsonDataServer):
         else:
             self.log("Could not find path", path)
             return FAIL_CODE
+
+    def index_media_folder(self, folder_path):
+        self.log("Indexing folder " +  folder_path)
+        for dirpath, _, names in os.walk(folder_path):
+            for name in names:
+                if any([name.endswith(suf) for suf in MEDIA_SUFFIX]):
+                    # (todo) deal with failure
+                    self.log("Indexing " + name)
+                    self.indexer.index_file(os.path.join(dirpath, name), "create")
+        # assuem happy
+        return SUCCEED_CODE
 
     def monitor(self, path):
         observer = Observer()

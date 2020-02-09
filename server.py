@@ -9,18 +9,17 @@ from daemonize import Daemonize
 
 from shared.jsonserver import JsonServer
 from shared.protocol import LOCALHOST
+from shared.protocol import MEDIA_MANAGER_PORT
 from player.server import PlayerServer
 from updater.server import UpdaterServer
 from searcher.server import SearcherServer
 from watcher.server import WatcherServer
 
-PORT = 31425
-
 class MediaManagerServer(JsonServer):
 
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        self.socket.bind((LOCALHOST, PORT))
+        self.socket.bind((LOCALHOST, MEDIA_MANAGER_PORT))
         self.host, self.port = self.socket.getsockname()
         self.log("Listening on {}:{}".format(self.host, self.port))
         self.servers = {
@@ -64,13 +63,17 @@ def main():
 
 if __name__ == '__main__':
     assert(len(sys.argv) == 2)
+    param = sys.argv[1]
     app_name = "media_manager"
     pidfile = '/tmp/%s-31425.pid' % app_name
-    if sys.argv[1] == "start" and not os.path.exists(pidfile):
+
+    if param == "start" and not os.path.exists(pidfile):
         daemon = Daemonize(app=app_name, pid=pidfile, action=main)
         daemon.start()
-    elif sys.argv[1] == "stop" and os.path.exists(pidfile):
+    elif param == "stop" and os.path.exists(pidfile):
         with open(pidfile, "r") as f:
             status = call(["kill", f.read()])
             print(status)
+    elif param == "test":
+        main()
     

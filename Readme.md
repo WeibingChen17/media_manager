@@ -14,11 +14,12 @@ A small manager for media
 * p0 - remove the strong dependency in mongo
 * ~~p1 - add __enter__ and __exit__ in all server to atuo close~~
 * ~~p0 - implement server launcher~~
-* p0 - use logging 
 * p0 - use server launcher for python cli. Use Cmd module
+* p0 - use logging 
 * p1 - design scheme for indexer
     * add duration and size 
 * p2 - refractor code
+* p2 - Issue warning when the watch folder is large
 * p1 - Exception handling
 * p2 - Maintain client - server connection
 * p2 - multiple clients support
@@ -33,3 +34,6 @@ A small manager for media
 * pymongo
 * filetype
 * Daemonize
+
+# Bugs
+* p0 fix: when watcher launches, all files are indexed

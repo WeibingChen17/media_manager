@@ -3,6 +3,7 @@ from datetime import datetime
 
 SEGEMENT_1K = 1024
 LOCALHOST = "127.0.0.1"
+MEDIA_MANAGER_PORT = 31425
 SUCCEED_CODE = {"status" : "succeed"}
 FAIL_CODE = {"status" : "fail"}
 LOG_FORMAT = "{} - {:<50} - {}"
