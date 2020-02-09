@@ -14,16 +14,17 @@ A small manager for media
 * p0 - remove the strong dependency in mongo
 * ~~p1 - add __enter__ and __exit__ in all server to atuo close~~
 * ~~p0 - implement server launcher~~
-* p0 - use server launcher for python cli. Use Cmd module
+* p0 - use server launcher for python cli. Use Cmd/Curse module
 * p0 - use logging 
-* p1 - design scheme for indexer
-    * add duration and size 
+* ~~p1 - design scheme for indexer~~
+* p2 - add duration and size 
 * p2 - refractor code
 * p2 - Issue warning when the watch folder is large
 * p1 - Exception handling
 * p2 - Maintain client - server connection
 * p2 - multiple clients support
-* p1 - enable server mode an1d module mode in jsonclient and jsonserver. This can decreases the number of servers we need
+* p2 - enable server mode an1d module mode in jsonclient and jsonserver. This can decreases the number of servers we need
+* p2 - use threading pooling
 
 # todo (phase 2)
 * p0 - use javascript to talk to servers
@@ -37,4 +38,5 @@ A small manager for media
 * Daemonize
 
 # Bugs
-* p0 fix: when watcher launches, all files are indexed
+* ~~p0 fix: when watcher launches, all files are indexed~~
+* p0 fix: when folder is removed, watch does not removed the watch folder

@@ -1,5 +1,6 @@
 from shared.jsonclient import JsonDataClient
 from shared.protocol import FAIL_CODE
+from shared.protocol import MediaEntry
 
 class SearcherClient(JsonDataClient):
     
@@ -13,5 +14,8 @@ class SearcherClient(JsonDataClient):
             if "name" in query:
                 query["name"] = {"$regex" : ".*" + query["name"] + ".*"}
             res =  self._send({"service" : "search", "query" : query})
-        return res if res != FAIL_CODE else []
+        if res == FAIL_CODE:
+            return []
+        else:
+            return [MediaEntry(entry) for entry in res]
 

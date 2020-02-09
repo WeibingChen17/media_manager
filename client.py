@@ -8,6 +8,10 @@ from watcher.client import WatcherClient
 from updater.client import UpdaterClient
 from searcher.client import SearcherClient
 
+SEARCH_PROMPT = "Search : " 
+PLAY_PROMPT = "PLAY : "
+EDIT_PROMPT = "Edit : "
+
 class MediaManagerClient(JsonClient):
     def __init__(self):
         super().__init__()
@@ -67,10 +71,18 @@ class MediaManagerClient(JsonClient):
         for path in self.watch_folders:
             self.watcher.watch(path)
 
-        query = input("Search: ")
-        while (query):
-            for res in self.searcher.search(query):
-                print(res)
-            query = input("Search: ")
+        query = input(SEARCH_PROMPT)
+        while query:
+            res = self.searcher.search(query)
+            self.search_format(res)
+            play_id = input(PLAY_PROMPT)
+            while play_id:
+                self.player.play(res[int(play_id)].path[0])
+                play_id = input(PLAY_PROMPT)
+            query = input(SEARCH_PROMPT)
 
+    def search_format(self, res):
+        assert(isinstance(res, list))
+        for ind, entry in enumerate(res):
+            print(" {index} {name} ".format(index=ind, name=entry.name))
 

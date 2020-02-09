@@ -23,24 +23,24 @@ with SearcherServer() as searcherServer:
 
     # insert a data
     # insert test, tag: good
-    entry = {"name":"test", "tag":"good"}
+    entry = {"name":"test", "tag": ["good"]}
     mycol.insert_one(entry)
 
     result = searcherClient.search("test")
     assert(len(result) == 1)
-    assert(result[0]["name"] == "test")
+    assert(result[0].name == "test")
 
     # insert another data
     # insert test2, tag: bad
-    entry = {"name":"test2", "tag":"bad"}
+    entry = {"name":"test2", "tag": ["bad"]}
     mycol.insert_one(entry)
 
     result = searcherClient.search("test")
     assert(len(result) == 2)
-    assert(result[0]["name"] == "test")
+    assert(result[0].name == "test")
 
     result = searcherClient.search({"tag" : "good"})
     assert(len(result) == 1)
-    assert(result[0]["tag"] == "good")
+    assert(result[0].tag == ["good"])
 
 

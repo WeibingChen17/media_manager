@@ -13,10 +13,9 @@ from watchdog.events import RegexMatchingEventHandler
 from shared.jsonserver import JsonDataServer
 from shared.protocol import SUCCEED_CODE
 from shared.protocol import FAIL_CODE
-
-# merge these two
-MEDIA_SUFFIX = [".mp4", ".flv", ".webm", ".jpeg", ".gif", ".png", ".jpg"]
-MEDIA_REGEX = [r".*\.mp4", r".*\.flv", r".*\.webm", r".*\.jpeg", r".*\.gif", r".*\.png", r".*\.jpg"]
+from shared.protocol import MediaEntry
+from shared.protocol import MEDIA_REGEX
+from shared.protocol import MEDIA_SUFFIX
 
 class Indexer:
     def __init__(self, collection):
@@ -27,29 +26,20 @@ class Indexer:
         if reason == "create":
             if self.col.count_documents(path_query) > 0:
                 print("Ignore an existing file path")
-                return "succeed"
+                return SUCCEED_CODE
             md5 = hashlib.md5(open(file_path, 'rb').read()).hexdigest()
             md5_query =  {"md5": md5}
             if self.col.count_documents(md5_query) == 0:
                 # unique new file: create a new doc
-                entry = dict()
-                entry["path"] = [file_path]
-                entry["md5"] = hashlib.md5(open(file_path,'rb').read()).hexdigest()
-                entry["release date"] = ""
-                entry["actress"] = []
-                entry["director"] = ""
-                entry["maker"] = ""
-                entry["disttributor"] = ""
-                entry["rating"] = 0
-                entry["tag"] = []
-                entry["designation"] = ""
+                entry = MediaEntry()
+                entry.path = [file_path]
+                entry.md5 = hashlib.md5(open(file_path,'rb').read()).hexdigest()
                 # add size and duration
-                entry["name"] = [os.path.basename(file_path)]
-                entry["size"] = os.stat(file_path).st_size
-                entry["type"] = filetype.guess(file_path)
+                entry.name = [os.path.basename(file_path)]
+                entry.size = os.stat(file_path).st_size
+                entry.type = filetype.guess(file_path)
                 # todo: determine the best way of determinnig duration(ffprob)
-                entry["duration"] = ""
-                self.col.insert_one(entry)
+                self.col.insert_one(entry.asdict())
             else:
                 # the same file: append the path
                 self.col.update(md5_query, {'$push': {"path" : file_path}})
@@ -70,7 +60,7 @@ class Indexer:
         elif reason == "delete":
             if self.col.count_documents(path_query) == 0:
                 print("Ignore nonexisting file path")
-                return "succeed"
+                return SUCCEED_CODE
             self.col.update(path_query, {'$pull': {"path" : file_path}})
             self.col.delete_many({"path" : []})
             return SUCCEED_CODE
