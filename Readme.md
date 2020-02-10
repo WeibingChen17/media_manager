@@ -25,6 +25,7 @@ A small manager for media
 * p2 - multiple clients support
 * p2 - enable server mode an1d module mode in jsonclient and jsonserver. This can decreases the number of servers we need
 * p2 - use threading pooling
+* p1 - use better update command to avoid multiple socket connections
 
 # todo (phase 2)
 * p0 - use javascript to talk to servers
@@ -39,4 +40,4 @@ A small manager for media
 
 # Bugs
 * ~~p0 fix: when watcher launches, all files are indexed~~
-* p0 fix: when folder is removed, watch does not removed the watch folder
+* ~~p0 fix: when folder is removed, watch does not removed the watch folder~~

@@ -25,9 +25,9 @@ FIELDS = {
         "maker" : "", 
         "distributor" : "", 
         "rating" : "", 
-        "tag" : "", 
+        "tag" : [], 
         "designation" : "", 
-        "name" : "", 
+        "name" : [], 
         "size" : "", 
         "type" : "", 
         "duration" : ""
@@ -43,6 +43,11 @@ class MediaEntry:
     def asdict(self):
         return dict(self.__dict__)
 
+    def __repr__(self):
+        res = ""
+        for field in self.__dict__:
+            res += "{:<15} : {}\n".format(field, self.__dict__[field])
+        return res
 
 class JsonProtocol:
     def __init__(self):

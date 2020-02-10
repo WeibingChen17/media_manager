@@ -3,6 +3,9 @@ from shared.protocol import FAIL_CODE
 from shared.protocol import MediaEntry
 
 class SearcherClient(JsonDataClient):
+
+    def search_by_id(self, entry_id):
+        return self.search({"_id" : entry_id})
     
     def search(self, query):
         if isinstance(query, str):

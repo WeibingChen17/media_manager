@@ -123,8 +123,6 @@ class WatcherServer(JsonDataServer):
 
     def watch(self, path):
         if os.path.exists(path):
-            if path in self.watchedFolder:
-                return SUCCEED_CODE
             self.watchedFolder.append(path)
 
             self.index_media_folder(path)

@@ -74,15 +74,47 @@ class MediaManagerClient(JsonClient):
         query = input(SEARCH_PROMPT)
         while query:
             res = self.searcher.search(query)
-            self.search_format(res)
-            play_id = input(PLAY_PROMPT)
-            while play_id:
-                self.player.play(res[int(play_id)].path[0])
-                play_id = input(PLAY_PROMPT)
+            self.show_search_result(res)
+            if res:
+                self.play(res)
             query = input(SEARCH_PROMPT)
 
-    def search_format(self, res):
-        assert(isinstance(res, list))
+    def show_search_result(self, res):
         for ind, entry in enumerate(res):
             print(" {index} {name} ".format(index=ind, name=entry.name))
+
+
+    def play(self, res):
+            play_id = input(PLAY_PROMPT)
+            while play_id:
+                if play_id == "show":
+                    self.show_search_result(res)
+                elif play_id != "edit":
+                    self.player.play(res[int(play_id)].path[0])
+                else:
+                    self.edit(res)
+                play_id = input(PLAY_PROMPT)
+
+    def edit(self, res):
+            edit_id = input(EDIT_PROMPT)
+            while edit_id:
+                mediaEntry = res[int(edit_id)]
+                print("The entry to edit:\n" + str(mediaEntry))
+                entry_id = mediaEntry._id
+                command = input("enter command :")
+                while command:
+                    if command == "delete":
+                        self.updater.delete(entry_id)
+                        print("entry {} is deleted".format(entry_id))
+                    elif command == "show":
+                        mediaEntry = self.searcher.search_by_id(entry_id)[0]
+                        print("Update entry to edit:\n" + str(mediaEntry))
+                    else:
+                        op, field, values = command.split()
+                        for value in values.split(","):
+                            query = {op : {field : value}}
+                            self.updater.update(entry_id, query)
+                    command = input("enter command :")
+                edit_id = input(EDIT_PROMPT)
+
 
