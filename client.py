@@ -8,9 +8,20 @@ from watcher.client import WatcherClient
 from updater.client import UpdaterClient
 from searcher.client import SearcherClient
 
-SEARCH_PROMPT = "Search : " 
+SEARCH_PROMPT = "SEARCH : " 
 PLAY_PROMPT = "PLAY : "
-EDIT_PROMPT = "Edit : "
+EDIT_PROMPT = "EDIT : "
+
+def _checkIndexRange(ind, lst):
+    try:
+        ind = int(ind)
+    except ValueError as e:
+        print("Index must be integer")
+        return None
+    if ind < 0 or ind > len(lst):
+        print("Index is out of range")
+        return None
+    return ind
 
 class MediaManagerClient(JsonClient):
     def __init__(self):
@@ -87,18 +98,29 @@ class MediaManagerClient(JsonClient):
     def play(self, res):
             play_id = input(PLAY_PROMPT)
             while play_id:
+                play_id = play_id.strip()
                 if play_id == "show":
                     self.show_search_result(res)
-                elif play_id != "edit":
-                    self.player.play(res[int(play_id)].path[0])
-                else:
+                elif play_id == "edit":
                     self.edit(res)
+                else:
+                    ind = _checkIndexRange(play_id, res)
+                    if ind:
+                        self.player.play(res[ind].path[0])
                 play_id = input(PLAY_PROMPT)
 
     def edit(self, res):
             edit_id = input(EDIT_PROMPT)
             while edit_id:
-                mediaEntry = res[int(edit_id)]
+                if edit_id == "show":
+                    self.show_search_result(res) 
+                    edit_id = input(EDIT_PROMPT)
+                    continue
+                ind = _checkIndexRange(edit_id, res)
+                if ind == None:
+                    edit_id = input(EDIT_PROMPT)
+                    continue
+                mediaEntry = res[ind]
                 print("The entry to edit:\n" + str(mediaEntry))
                 entry_id = mediaEntry._id
                 command = input("enter command :")
@@ -110,10 +132,19 @@ class MediaManagerClient(JsonClient):
                         mediaEntry = self.searcher.search_by_id(entry_id)[0]
                         print("Update entry to edit:\n" + str(mediaEntry))
                     else:
-                        op, field, values = command.split()
-                        for value in values.split(","):
-                            query = {op : {field : value}}
-                            self.updater.update(entry_id, query)
+                        op, field, *values = command.split()
+                        if hasattr(mediaEntry, field):
+                            if (op == "add" or op == "remove") and not isinstance(mediaEntry.__dict__[field], list):
+                                print("Operation is not supported in this field. Use `change` instead")
+                            elif field in ["name", "size", "type", "duration"]:
+                                print("Immutable Field: {}".format(field))
+                            else:
+                                queryList = []
+                                for value in " ".join(values).split(","):
+                                    queryList.append({op : {field : value.strip('"')}})
+                                self.updater.update_all(entry_id, queryList)
+                        else:
+                            print("No such field in MediaEntry")
                     command = input("enter command :")
                 edit_id = input(EDIT_PROMPT)
 

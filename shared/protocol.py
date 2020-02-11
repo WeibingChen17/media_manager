@@ -33,6 +33,7 @@ FIELDS = {
         "duration" : ""
         }
 
+
 class MediaEntry:
     def __init__(self, entry=None):
         if entry:
