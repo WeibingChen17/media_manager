@@ -1,19 +1,20 @@
 #!/usr/bin/python3
-
 from client import MediaManagerClient
 
-class MyJav(MediaManagerClient):
-    def __init__(self):
-        super().__init__()
-        self.watch_folders = [
-                "/home/weibing/WindowsData/OneDrive/Ntest/", 
-                "/home/weibing/Downloads/", 
-                "/home/weibing/dwhelper/"]
-        self.database = "MyJav"
-        self.collection = "FileList"
+
+database = "MyJav"
+collection = "FileList"
+watch_folders = [
+        "/home/weibing/WindowsData/OneDrive/Ntest/", 
+        "/home/weibing/WindowsData/Downloads",
+        "/home/weibing/Downloads/", 
+        "/home/weibing/dwhelper/"]
 
 def main():
-    myjav = MyJav()
+    myjav = MediaManagerClient()
+    myjav.set_database(database)
+    myjav.set_collection(collection)
+    myjav.set_watch_folders(watch_folders)
     myjav.run()
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ A small manager for media
 * p0 - use server launcher for python cli. Use Cmd/Curse module
 * p0 - use logging 
 * ~~p1 - design scheme for indexer~~
-* p2 - add duration and size 
+* p2 - add duration and ~~size~~
 * p2 - refractor code
 * p2 - Issue warning when the watch folder is large
 * p1 - Exception handling
