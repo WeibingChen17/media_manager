@@ -26,6 +26,7 @@ def _checkIndexRange(ind, lst):
 class MediaManagerClient(JsonClient):
     def __init__(self):
         super().__init__()
+        self.name = ""
         self.set_host = LOCALHOST
         self.set_port(MEDIA_MANAGER_PORT)
         self.watch_folders = []
@@ -37,6 +38,9 @@ class MediaManagerClient(JsonClient):
             "Updater" : UpdaterClient(),
             "Searcher" : SearcherClient()
             }
+
+    def set_name(self, name):
+        self.name = name
 
     def set_database(self, database):
         self.database = database
@@ -92,7 +96,7 @@ class MediaManagerClient(JsonClient):
 
     def show_search_result(self, res):
         for ind, entry in enumerate(res):
-            print(" {index} {name} ".format(index=ind, name=entry.name))
+            print(" {index} {name} {size}".format(index=ind, name=entry.name, name=entry.size))
 
 
     def play(self, res):

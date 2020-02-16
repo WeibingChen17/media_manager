@@ -16,6 +16,9 @@ from updater.server import UpdaterServer
 from searcher.server import SearcherServer
 from watcher.server import WatcherServer
 
+app_name = "media_manager"
+log_file = "/var/log/media_manager/log"
+
 class MediaManagerServer(JsonServer):
 
     def __init__(self):
@@ -52,22 +55,27 @@ class MediaManagerServer(JsonServer):
         return res
 
 def main():
+    saved_stdout = sys.stdout
     try:
-        with MediaManagerServer() as mediaManagerServer:
+        with open(log_file, 'a+') as log, MediaManagerServer() as mediaManagerServer:
+            sys.stdout = log
             while True:
                 # Sleep the main thread to reduce cpu usage
                 time.sleep(1000)
+                log.flush()
     except KeyboardInterrupt:
         pass
     except OSError:
         print("Port is used. Manybe a media manager is already running.")
+    finally:
+        sys.stdout = saved_stdout
+        mediaManagerServer.stop()
         
 
 if __name__ == '__main__':
     assert(len(sys.argv) == 2)
     param = sys.argv[1]
-    app_name = "media_manager"
-    pidfile = '/tmp/%s-31425.pid' % app_name
+    pidfile = "/tmp/%s-31425.pid" % app_name
 
     if param == "start" and not os.path.exists(pidfile):
         daemon = Daemonize(app=app_name, pid=pidfile, action=main)
