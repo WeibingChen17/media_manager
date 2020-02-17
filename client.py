@@ -3,6 +3,8 @@ import sys
 from shared.jsonclient import JsonClient
 from shared.constants import LOCALHOST
 from shared.constants import MEDIA_MANAGER_PORT
+from shared.constants import SUCCEED_CODE
+from shared.constants import FAIL_CODE
 from player.client import PlayerClient
 from watcher.client import WatcherClient
 from updater.client import UpdaterClient
@@ -88,10 +90,11 @@ class MediaManagerClient(JsonClient):
 
         query = input(SEARCH_PROMPT)
         while query:
-            try:
-                query = eval("{" + query + "}")
-            except:
-                pass
+            if ":" in query:
+                try:
+                    query = eval("{" + query + "}")
+                except:
+                    query = input(SEARCH_PROMPT)
             res = self.searcher.search(query)
             self.show_search_result(res)
             if res:
@@ -122,8 +125,10 @@ class MediaManagerClient(JsonClient):
                     self.edit(res)
                 else:
                     ind = _checkIndexRange(play_id, res)
-                    if ind:
-                        self.player.play(res[ind].path[0])
+                    if ind != None:
+                        status = self.player.play(res[ind].path[0])
+                        if status != SUCCEED_CODE:
+                            print("Player is not able to play. Status = ", status)
                 play_id = input(PLAY_PROMPT)
 
     def edit(self, res):

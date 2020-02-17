@@ -159,9 +159,10 @@ class WatcherServer(JsonDataServer):
 
     def watch(self, path):
         if os.path.exists(path):
+            if path in self.watchedFolder:
+                self.log("{} is already watched".format(path))
+                return SUCCEED_CODE
             self.watchedFolder.append(path)
-
-            self.index_media_folder(path)
 
             self.log("Watching folder " + path)
             thread = threading.Thread(target=self.monitor, args=(path,), name=path)
@@ -187,6 +188,7 @@ class WatcherServer(JsonDataServer):
         observer = Observer()
         observer.schedule(self.mediaFileEventHandler, path, recursive=True)
         observer.start()
+        self.index_media_folder(path)
         t = threading.currentThread();
         while getattr(t, "do_run", True):
             time.sleep(1)

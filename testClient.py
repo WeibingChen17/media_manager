@@ -25,7 +25,7 @@ with open(test_path + "test1.mp4", 'w') as f:
 with open(test_path + "test2.jpg", 'w') as f:
         f.write('aldsjfadfjasdf ad\nalkjdlfja')
 
-shutil.copyfile("/home/weibing/a.mp4", test_path + "test2.mp4")
+shutil.copyfile("/home/weibing/a.mp4", test_path + "test2\ d.mp4")
 
 with open(test_path + "test", 'w') as f:
     f.write("tetasdf")
