@@ -111,7 +111,7 @@ class MediaManagerClient(JsonClient):
         else:
             filter_res = res
         for ind, entry in enumerate(filter_res):
-            print("{index:<5} {size:<10} {name} ".format(index=ind, name=str(entry.name), size=entry.size))
+            print("{index:<5} {size:<10} {name} ".format(index=ind, name=entry.name, size=entry.size))
 
     def play(self, res):
             play_id = input(PLAY_PROMPT)
@@ -158,7 +158,7 @@ class MediaManagerClient(JsonClient):
                         if hasattr(mediaEntry, field):
                             if (op == "add" or op == "remove") and not isinstance(mediaEntry.__dict__[field], list):
                                 print("Operation is not supported in this field. Use `change` instead")
-                            elif field in ["name", "size", "type", "duration"]:
+                            elif field in ["path", "name", "size", "type", "duration"]:
                                 print("Immutable Field: {}".format(field))
                             else:
                                 queryList = []

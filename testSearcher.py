@@ -5,6 +5,9 @@ import pymongo
 
 from searcher.client import SearcherClient
 from searcher.server import SearcherServer
+from shared.constants import debug_logging
+
+debug_logging()
 
 with SearcherServer() as searcherServer:
 
@@ -42,6 +45,8 @@ with SearcherServer() as searcherServer:
     result = searcherClient.search({"tag" : "good"})
     assert(len(result) == 1)
     assert(result[0].tag == ["good"])
+
+    mycol.delete_many({}) # reset collection
 
 print("Searcher: Tests pass")
 

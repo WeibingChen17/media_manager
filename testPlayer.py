@@ -1,6 +1,9 @@
 import time
 from player.client import PlayerClient
 from player.server import PlayerServer
+from shared.constants import debug_logging
+
+debug_logging()
 
 
 def main():

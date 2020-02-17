@@ -1,23 +1,29 @@
 import os
+import sys
 import time
 import shutil
+import logging
 
 import pymongo
 
 from watcher.client import WatcherClient
 from watcher.server import WatcherServer
+from shared.constants import debug_logging
+
+debug_logging()
+
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mydb = myclient["testDatabase"]
+mycol = mydb["media_manager"]
+mycol.delete_many({}) # reset collection
 
 with WatcherServer() as watcherServer:
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
     watcherClient = WatcherClient(watcherServer)
 
     watcherClient.set_database("testDatabase")
     watcherClient.set_collection("media_manager")
-
-    myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-    mydb = myclient["testDatabase"]
-    mycol = mydb["media_manager"]
-    mycol.delete_many({}) # reset collection
 
     tmp_folder = "/tmp/Test2341/"
     if os.path.exists(tmp_folder):
@@ -53,6 +59,7 @@ with WatcherServer() as watcherServer:
     assert(mycol.count_documents({}) == 3)
     assert(mycol.count_documents({"name":"test.mp4"}) == 0)
     assert(mycol.count_documents({"name":"tset3.mp4"}) == 1)
+    assert(mycol.find_one({"name":"tset3.mp4"}).get("path") == tmp_folder + "tset3.mp4")
 
     os.remove(tmp_folder + "tet2.jpg")
     time.sleep(0.5)
@@ -62,9 +69,11 @@ with WatcherServer() as watcherServer:
     # test move
     os.mkdir(tmp_folder + "tmp2/")
     shutil.move(tmp_folder + "tset3.mp4", tmp_folder + "tmp2/tset3.mp4")
+    time.sleep(1.5) # very slow, create and delete
     assert(mycol.count_documents({"name":"tset3.mp4"}) == 1)
     assert(mycol.find_one({"name":"tset3.mp4"}).get("path") == tmp_folder + "tmp2/tset3.mp4")
 
-    shutil.rmtree(tmp_folder)
+shutil.rmtree(tmp_folder)
+mycol.delete_many({}) # reset collection
 
 print("Watcher: Tests pass")

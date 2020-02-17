@@ -3,7 +3,6 @@ import time
 import json
 import socket
 import threading
-import hashlib
 import logging 
 from subprocess import  check_output, CalledProcessError, STDOUT 
 
@@ -55,44 +54,29 @@ class Indexer:
             if self.col.count_documents(path_query) > 0:
                 self.log("Ignore an existing file path")
                 return SUCCEED_CODE
-            md5 = hashlib.md5(open(file_path, 'rb').read()).hexdigest()
-            md5_query =  {"md5": md5}
-            if self.col.count_documents(md5_query) == 0:
-                # unique new file: create a new doc
-                entry = MediaEntry()
-                entry.path = [file_path]
-                entry.md5 = hashlib.md5(open(file_path,'rb').read()).hexdigest()
-                # add size and duration
-                entry.name = [os.path.basename(file_path)]
-                entry.size = os.stat(file_path).st_size
-                guesstype = magic.from_file(file_path, mime=True)
-                entry.type = guesstype if guesstype else "unknown"
-                if entry.type.startswith("video"):
-                    entry.duration = getDuration(file_path)
-                self.col.insert_one(entry.asdict())
-            else:
-                # the same file: append the path
-                self.col.update(md5_query, {'$push': {"path" : file_path}})
+            entry = MediaEntry()
+            entry.path = file_path
+            entry.name = os.path.basename(file_path)
+            entry.size = os.stat(file_path).st_size
+            guesstype = magic.from_file(file_path, mime=True)
+            entry.type = guesstype if guesstype else "unknown"
+            if entry.type.startswith("video"):
+                entry.duration = getDuration(file_path)
+            self.col.insert_one(entry.asdict())
             return SUCCEED_CODE
         elif reason == "move":
             if self.col.count_documents(path_query) == 0:
                 self.log("Ignore nonexisting file path")
                 return "succeed"
-            self.col.update(path_query, {
-                '$push': {"path" : dest_path}, 
-                '$push': {"name": os.path.basename(dest_path)}
-                })
-            self.col.update(path_query, {
-                '$pull': {"path" : file_path},
-                '$pull': {"name" : os.path.basename(file_path)}
+            res = self.col.update(path_query, {
+                '$set': {"path" : dest_path, "name" : os.path.basename(dest_path)},
                 })
             return SUCCEED_CODE
         elif reason == "delete":
             if self.col.count_documents(path_query) == 0:
                 self.log("Ignore nonexisting file path")
                 return SUCCEED_CODE
-            self.col.update(path_query, {'$pull': {"path" : file_path}})
-            self.col.delete_many({"path" : []})
+            res = self.col.delete_one({"path" : file_path})
             return SUCCEED_CODE
         elif reason == "modified":
             # todo

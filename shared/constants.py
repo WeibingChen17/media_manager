@@ -1,3 +1,4 @@
+import sys
 import logging
 
 SEGEMENT_1K = 1024
@@ -13,6 +14,17 @@ FORMAT = '%(asctime)-15s %(host)-25s %(message)s'
 
 def log_print(host, message):
     logging.info(message, extra={"host": host})
+    # print(host, message)
+
+def debug_logging():
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(asctime)s - %(message)s")
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
 
 # (todo) merge these two
 MEDIA_SUFFIX = [".mp4", ".flv", ".webm", ".jpeg", ".gif", ".png", ".jpg"]
@@ -20,7 +32,6 @@ MEDIA_REGEX = [r".*\.mp4", r".*\.flv", r".*\.webm", r".*\.jpeg", r".*\.gif", r".
 
 FIELDS = {
         "path" : "", 
-        "md5" : "" , 
         "release_data" : "" , 
         "actress" : [], 
         "director" : "", 
@@ -29,7 +40,7 @@ FIELDS = {
         "rating" : "", 
         "tag" : [], 
         "designation" : "", 
-        "name" : [], 
+        "name" : "", 
         "size" : "", 
         "type" : "", 
         "duration" : ""

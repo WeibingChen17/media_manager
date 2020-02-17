@@ -2,6 +2,9 @@ import pymongo
 
 from updater.client import UpdaterClient
 from updater.server import UpdaterServer
+from shared.constants import debug_logging
+
+debug_logging()
 
 with UpdaterServer() as updaterServer:
 
@@ -34,5 +37,6 @@ with UpdaterServer() as updaterServer:
 
     updaterClient.update(doc_id, {"delete" : {}})
     assert(mycol.count_documents({"actress" : "test1"}) == 0)
+    mycol.delete_many({}) # reset collection
 
 print("Updater: Tests pass")
