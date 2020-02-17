@@ -81,8 +81,20 @@ if __name__ == '__main__':
         daemon.start()
     elif param == "stop" and os.path.exists(pidfile):
         with open(pidfile, "r") as f:
-            status = call(["kill", f.read()])
-            print(status)
+            pid = int(f.read())
+            try:
+                os.kill(pid, 15)
+            except OSError:
+                print("Could not stop server with Signal 15. Pid = ", pid)
+                try:
+                    os.kill(pid, 9)
+                except OSError:
+                    print("Could not stop server with Signal 9. Pid = ", pid)
+                    print("Do it by yourself")
+                else:
+                    print("Server stopped. Pid = ", pid)
+            else:
+                print("Server stopped. Pid = ", pid)
     elif param == "status":
         print("running" if os.path.exists(pidfile) else "stop")
     elif param == "test":

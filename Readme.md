@@ -30,6 +30,8 @@ A small manager for media
 * p2 - enable server mode and module mode in jsonclient and jsonserver. This can decreases the number of servers we need
 * p2 - use threading pooling
 * p1 - use better update command to avoid multiple socket connections
+* p2 - Async promgramming in python
+* p1 - Different client should use different database when they are running
 
 # todo (phase 2)
 * p0 - use javascript to talk to servers

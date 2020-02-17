@@ -5,6 +5,7 @@ import socket
 import threading
 import hashlib
 import logging 
+from subprocess import  check_output, CalledProcessError, STDOUT 
 
 import pymongo
 import magic
@@ -17,6 +18,28 @@ from shared.constants import MediaEntry
 from shared.constants import MEDIA_REGEX
 from shared.constants import MEDIA_SUFFIX
 from shared.jsonserver import JsonDataServer
+
+# copied from https://stackoverflow.com/questions/3844430/how-to-get-the-duration-of-a-video-in-python
+def getDuration(filename):
+
+    command = [
+        'ffprobe', 
+        '-v', 
+        'error', 
+        '-show_entries', 
+        'format=duration', 
+        '-of', 
+        'default=noprint_wrappers=1:nokey=1', 
+        filename
+      ]
+
+    try:
+        output = check_output( command, stderr=STDOUT ).decode()
+    except CalledProcessError as e:
+        output = e.output.decode()
+
+    return output.strip("\n")
+
 
 class Indexer:
     def __init__(self, collection):
@@ -44,7 +67,8 @@ class Indexer:
                 entry.size = os.stat(file_path).st_size
                 guesstype = magic.from_file(file_path, mime=True)
                 entry.type = guesstype if guesstype else "unknown"
-                # todo: determine the best way of determinnig duration(ffprob)
+                if entry.type.startswith("video"):
+                    entry.duration = getDuration(file_path)
                 self.col.insert_one(entry.asdict())
             else:
                 # the same file: append the path

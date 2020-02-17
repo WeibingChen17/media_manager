@@ -9,6 +9,7 @@ class SearcherClient(JsonDataClient):
     
     def search(self, query):
         if isinstance(query, str):
+            query = query.replace("-", ".*")
             res =  self._send({
                 "service" : "search", 
                 "query" : {"name" : {"$regex" : ".*" + query + ".*"}}

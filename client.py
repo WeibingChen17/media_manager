@@ -88,6 +88,10 @@ class MediaManagerClient(JsonClient):
 
         query = input(SEARCH_PROMPT)
         while query:
+            try:
+                query = eval("{" + query + "}")
+            except:
+                pass
             res = self.searcher.search(query)
             self.show_search_result(res)
             if res:
@@ -104,7 +108,7 @@ class MediaManagerClient(JsonClient):
         else:
             filter_res = res
         for ind, entry in enumerate(filter_res):
-            print(" {index} {name} {type} {size}".format(index=ind, name=entry.name, type=entry.type, size=entry.size))
+            print("{index:<5} {size:<10} {name} ".format(index=ind, name=str(entry.name), size=entry.size))
 
     def play(self, res):
             play_id = input(PLAY_PROMPT)

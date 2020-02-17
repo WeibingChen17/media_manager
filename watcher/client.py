@@ -4,5 +4,5 @@ class WatcherClient(JsonDataClient):
 
     def watch(self, path):
         data = {"service" : "watch", "path": path}
-        return self._send(data)
+        return self._send(data, wait_for_replay=False)
 
