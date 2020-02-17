@@ -1,4 +1,4 @@
-from shared.protocol import SUCCEED_CODE
+from shared.constants import SUCCEED_CODE
 from shared.jsonclient import JsonDataClient
 
 class UpdaterClient(JsonDataClient):

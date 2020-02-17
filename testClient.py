@@ -9,10 +9,10 @@ test_database = "testDatabase"
 test_collection = "media_manager"
 test_path = "/tmp/Test1234/"
 
-# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-# mydb = myclient[test_database]
-# mycol = mydb[test_collection]
-# mycol.delete_many({}) # reset collection
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mydb = myclient[test_database]
+mycol = mydb[test_collection]
+mycol.delete_many({}) # reset collection
 
 mediaManagerClient = MediaManagerClient()
 mediaManagerClient.set_database(test_database)

@@ -1,10 +1,10 @@
 import threading
 from subprocess import call
 
+from shared.constants import SUCCEED_CODE
+from shared.constants import FAIL_CODE
+from shared.constants import LOG_FORMAT
 from shared.jsonserver import JsonServer
-from shared.protocol import SUCCEED_CODE
-from shared.protocol import FAIL_CODE
-from shared.protocol import LOG_FORMAT
 
 class PlayerServer(JsonServer):
 

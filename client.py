@@ -1,8 +1,8 @@
 import sys
 
 from shared.jsonclient import JsonClient
-from shared.protocol import LOCALHOST
-from shared.protocol import MEDIA_MANAGER_PORT
+from shared.constants import LOCALHOST
+from shared.constants import MEDIA_MANAGER_PORT
 from player.client import PlayerClient
 from watcher.client import WatcherClient
 from updater.client import UpdaterClient
@@ -94,10 +94,17 @@ class MediaManagerClient(JsonClient):
                 self.play(res)
             query = input(SEARCH_PROMPT)
 
-    def show_search_result(self, res):
-        for ind, entry in enumerate(res):
-            print(" {index} {name} {size}".format(index=ind, name=entry.name, name=entry.size))
-
+    def show_search_result(self, res, extra=None):
+        if extra == "sort size":
+            filter_res = sorted(res, key=lambda entry:entry.size, reverse=True)
+        elif extra == "sort name":
+            filter_res = sorted(res, key=lambda entry:entry.name)
+        elif extra == "only video":
+            filter_res = [entry for entry in res if entry.type and entry.type.startswith("video")]
+        else:
+            filter_res = res
+        for ind, entry in enumerate(filter_res):
+            print(" {index} {name} {type} {size}".format(index=ind, name=entry.name, type=entry.type, size=entry.size))
 
     def play(self, res):
             play_id = input(PLAY_PROMPT)
@@ -105,6 +112,8 @@ class MediaManagerClient(JsonClient):
                 play_id = play_id.strip()
                 if play_id == "show":
                     self.show_search_result(res)
+                elif play_id in ["sort name", "sort size", "only video"]:
+                    self.show_search_result(res, play_id)
                 elif play_id == "edit":
                     self.edit(res)
                 else:

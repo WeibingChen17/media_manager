@@ -4,28 +4,33 @@ import json
 import socket
 import threading
 import hashlib
+import logging 
 
 import pymongo
-import filetype
+import magic
 from watchdog.observers import Observer
 from watchdog.events import RegexMatchingEventHandler
 
+from shared.constants import SUCCEED_CODE
+from shared.constants import FAIL_CODE
+from shared.constants import MediaEntry
+from shared.constants import MEDIA_REGEX
+from shared.constants import MEDIA_SUFFIX
 from shared.jsonserver import JsonDataServer
-from shared.protocol import SUCCEED_CODE
-from shared.protocol import FAIL_CODE
-from shared.protocol import MediaEntry
-from shared.protocol import MEDIA_REGEX
-from shared.protocol import MEDIA_SUFFIX
 
 class Indexer:
     def __init__(self, collection):
         self.col = collection
+        self.log = logging.info
+
+    def set_log(self, log):
+        self.log = log
 
     def index_file(self, file_path, reason, dest_path=""):
         path_query = {"path" : file_path}
         if reason == "create":
             if self.col.count_documents(path_query) > 0:
-                print("Ignore an existing file path")
+                self.log("Ignore an existing file path")
                 return SUCCEED_CODE
             md5 = hashlib.md5(open(file_path, 'rb').read()).hexdigest()
             md5_query =  {"md5": md5}
@@ -37,7 +42,8 @@ class Indexer:
                 # add size and duration
                 entry.name = [os.path.basename(file_path)]
                 entry.size = os.stat(file_path).st_size
-                entry.type = filetype.guess(file_path)
+                guesstype = magic.from_file(file_path, mime=True)
+                entry.type = guesstype if guesstype else "unknown"
                 # todo: determine the best way of determinnig duration(ffprob)
                 self.col.insert_one(entry.asdict())
             else:
@@ -46,7 +52,7 @@ class Indexer:
             return SUCCEED_CODE
         elif reason == "move":
             if self.col.count_documents(path_query) == 0:
-                print("Ignore nonexisting file path")
+                self.log("Ignore nonexisting file path")
                 return "succeed"
             self.col.update(path_query, {
                 '$push': {"path" : dest_path}, 
@@ -59,7 +65,7 @@ class Indexer:
             return SUCCEED_CODE
         elif reason == "delete":
             if self.col.count_documents(path_query) == 0:
-                print("Ignore nonexisting file path")
+                self.log("Ignore nonexisting file path")
                 return SUCCEED_CODE
             self.col.update(path_query, {'$pull': {"path" : file_path}})
             self.col.delete_many({"path" : []})
@@ -73,27 +79,31 @@ class MediaFileEventHandler(RegexMatchingEventHandler):
     def __init__(self):
         super().__init__(MEDIA_REGEX)
         self.indexer = None
+        self.log = logging.info
+
+    def set_log(self, log):
+        self.log = log
 
     def set_indexer(self, indexer):
         self.indexer = indexer
 
     def on_created(self, event):
-        print("file {} is created".format(event.src_path))
+        self.log("file {} is created".format(event.src_path))
         if self.indexer:
             self.indexer.index_file(event.src_path, "create")
 
     def on_moved(self, event):
-        print("file {} is moved to {}".format(event.src_path, event.dest_path))
+        self.log("file {} is moved to {}".format(event.src_path, event.dest_path))
         if self.indexer:
             self.indexer.index_file(event.src_path, "move", event.dest_path)
 
     def on_deleted(self, event):
-        print("file {} is deleted".format(event.src_path))
+        self.log("file {} is deleted".format(event.src_path))
         if self.indexer:
             self.indexer.index_file(event.src_path, "delete")
 
     def on_modified(self, event):
-        print("file {} is modified".format(event.src_path))
+        self.log("file {} is modified".format(event.src_path))
 
 
 class WatcherServer(JsonDataServer):
@@ -108,7 +118,9 @@ class WatcherServer(JsonDataServer):
         res = super().set_collection(collection)
         if res == SUCCEED_CODE:
             self.indexer = Indexer(self.col)
+            self.indexer.set_log(self.log)
             self.mediaFileEventHandler.set_indexer(self.indexer)
+            self.mediaFileEventHandler.set_log(self.log)
         return res
 
     def get_watched_folder():

@@ -6,8 +6,8 @@ from bson.objectid import ObjectId
 
 import pymongo
 
-from shared.protocol import SUCCEED_CODE
-from shared.protocol import FAIL_CODE
+from shared.constants import SUCCEED_CODE
+from shared.constants import FAIL_CODE
 from shared.jsonserver import JsonDataServer
 
 class UpdaterServer(JsonDataServer):

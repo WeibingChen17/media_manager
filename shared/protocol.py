@@ -1,54 +1,5 @@
-import json
 import collections
-from datetime import datetime
-
-SEGEMENT_1K = 1024
-LOCALHOST = "127.0.0.1"
-MEDIA_MANAGER_PORT = 31425
-SUCCEED_CODE = {"status" : "succeed"}
-FAIL_CODE = {"status" : "fail"}
-LOG_FORMAT = "{} - {:<50} - {}"
-
-# (todo) merge these two
-MEDIA_SUFFIX = [".mp4", ".flv", ".webm", ".jpeg", ".gif", ".png", ".jpg"]
-MEDIA_REGEX = [r".*\.mp4", r".*\.flv", r".*\.webm", r".*\.jpeg", r".*\.gif", r".*\.png", r".*\.jpg"]
-
-def log_print(host, string):
-    print(LOG_FORMAT.format(datetime.now(), host, string))
-
-FIELDS = {
-        "path" : "", 
-        "md5" : "" , 
-        "release_data" : "" , 
-        "actress" : [], 
-        "director" : "", 
-        "maker" : "", 
-        "distributor" : "", 
-        "rating" : "", 
-        "tag" : [], 
-        "designation" : "", 
-        "name" : [], 
-        "size" : "", 
-        "type" : "", 
-        "duration" : ""
-        }
-
-
-class MediaEntry:
-    def __init__(self, entry=None):
-        if entry:
-            self.__dict__ = dict(entry)
-        else:
-            self.__dict__ = FIELDS
-    
-    def asdict(self):
-        return dict(self.__dict__)
-
-    def __repr__(self):
-        res = ""
-        for field in self.__dict__:
-            res += "{:<15} : {}\n".format(field, self.__dict__[field])
-        return res
+import json
 
 class JsonProtocol:
     def __init__(self):

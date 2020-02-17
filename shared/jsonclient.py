@@ -2,9 +2,9 @@ import json
 import socket 
 from datetime import datetime
 
-from shared.protocol import SEGEMENT_1K
-from shared.protocol import log_print
-from shared.protocol import LOCALHOST
+from shared.constants import log_print
+from shared.constants import SEGEMENT_1K
+from shared.constants import LOCALHOST
 from shared.protocol import JsonProtocol
 
 class JsonClient:
@@ -24,8 +24,8 @@ class JsonClient:
     def set_port(self, port):
         self.port = port
 
-    def log(self, string):
-        log_print(str(self), string)
+    def log(self, message):
+        log_print(str(self), message)
 
     def _send(self, data):
         assert(isinstance(data, dict))

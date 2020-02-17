@@ -1,6 +1,6 @@
+from shared.constants import FAIL_CODE
+from shared.constants import MediaEntry
 from shared.jsonclient import JsonDataClient
-from shared.protocol import FAIL_CODE
-from shared.protocol import MediaEntry
 
 class SearcherClient(JsonDataClient):
 

@@ -39,7 +39,7 @@ A small manager for media
 
 # dependencies
 * pymongo
-* filetype
+* python-magic
 * Daemonize
 
 # Bugs

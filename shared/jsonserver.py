@@ -4,11 +4,11 @@ import threading
 
 import pymongo
 
-from shared.protocol import SEGEMENT_1K
-from shared.protocol import SUCCEED_CODE
-from shared.protocol import FAIL_CODE
-from shared.protocol import LOCALHOST
-from shared.protocol import log_print
+from shared.constants import SEGEMENT_1K
+from shared.constants import SUCCEED_CODE
+from shared.constants import FAIL_CODE
+from shared.constants import LOCALHOST
+from shared.constants import log_print
 from shared.protocol import JsonProtocol
 
 MONGO_PORT = "mongodb://localhost:27017/"
@@ -39,8 +39,8 @@ class JsonServer:
     def get_port(self):
         return self.port
 
-    def log(self, string):
-        log_print(str(self), string)
+    def log(self, message):
+        log_print(str(self), message)
 
     def start(self):
         self.thread = threading.Thread(target=self.__run, args=())

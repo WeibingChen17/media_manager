@@ -1,9 +1,9 @@
 import os
 import socket
 
+from shared.constants import SUCCEED_CODE
+from shared.constants import FAIL_CODE
 from shared.jsonclient import JsonClient
-from shared.protocol import SUCCEED_CODE
-from shared.protocol import FAIL_CODE
 
 class PlayerClient(JsonClient):
 
