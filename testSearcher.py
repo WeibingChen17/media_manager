@@ -43,4 +43,6 @@ with SearcherServer() as searcherServer:
     assert(len(result) == 1)
     assert(result[0].tag == ["good"])
 
+print("Searcher: Tests pass")
+
 

@@ -14,25 +14,25 @@ with UpdaterServer() as updaterServer:
     mycol = mydb["media_manager"]
     mycol.delete_many({}) # reset collection
 
-    entry = {"name":["test"], "director":"good"}
+    entry = {"actress":["test"], "director":"good"}
     mycol.insert_one(entry)
 
-    doc_id = str(mycol.find_one({"name" : "test"}).get("_id"))
+    doc_id = str(mycol.find_one({"actress" : "test"}).get("_id"))
 
-    updaterClient.update(doc_id, {"add" : {"name": "test1"}})
-    assert(mycol.find_one({"name" : "test"}).get("name") == ["test", "test1"])
+    updaterClient.update(doc_id, {"add" : {"actress": "test1"}})
+    assert(mycol.find_one({"actress" : "test"}).get("actress") == ["test", "test1"])
 
-    updaterClient.update(doc_id, {"remove" : {"name": "test"}})
-    assert(mycol.find_one({"name" : "test1"}).get("name") == ["test1"])
+    updaterClient.update(doc_id, {"remove" : {"actress": "test"}})
+    assert(mycol.find_one({"actress" : "test1"}).get("actress") == ["test1"])
 
     updaterClient.update(doc_id, {"change" : {"director": "bad"}})
-    assert(mycol.find_one({"name" : "test1"}).get("director") == "bad")
+    assert(mycol.find_one({"actress" : "test1"}).get("director") == "bad")
 
-    updaterClient.update(doc_id, {"change" : {"director": "good"}, "add" : { "name": "test2"}})
-    assert(mycol.find_one({"name" : "test1"}).get("director") == "good")
-    assert(mycol.find_one({"name" : "test2"}).get("name") == ["test1", "test2"])
+    updaterClient.update(doc_id, {"change" : {"director": "good"}, "add" : { "actress": "test2"}})
+    assert(mycol.find_one({"actress" : "test1"}).get("director") == "good")
+    assert(mycol.find_one({"actress" : "test2"}).get("actress") == ["test1", "test2"])
 
     updaterClient.update(doc_id, {"delete" : {}})
-    assert(mycol.count_documents({"name" : "test1"}) == 0)
+    assert(mycol.count_documents({"actress" : "test1"}) == 0)
 
-print("Tests pass")
+print("Updater: Tests pass")

@@ -35,6 +35,7 @@ A small media manager
 * p0 - when files are moved, it is deleted and then created. md5 is calculated again. move never works
     * - delete is wrong. Some entry still has the old path
 * p1 - `set watcher folders` needs better design. `Add watch folder` and `remove watch folder` should be enabled
+* p0 - Use cmd module
 
 # todo (phase 2)
 * p0 - use javascript to talk to servers
@@ -53,3 +54,4 @@ A small media manager
 
 # log
 * [Sat 15 Feb 2020 10:57:13 PM PST] start testing
+* [Mon 17 Feb 2020 11:24:56 AM PST] Refactoring

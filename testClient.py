@@ -1,5 +1,6 @@
 import os 
 import shutil
+from subprocess import call
 
 import pymongo
 
@@ -30,12 +31,14 @@ shutil.copyfile("/home/weibing/a.mp4", test_path + "test2\ d.mp4")
 with open(test_path + "test", 'w') as f:
     f.write("tetasdf")
 
-with open(test_path + "large_test.mp4", 'wb') as f:
-    f.seek(1073741824-1)
-    f.write(b"\0")
+# test large file
+# with open(test_path + "large_test.mp4", 'wb') as f:
+#     f.seek(1073741824-1)
+#     f.write(b"\0")
 
 # run
 try:
+    call(["./server.py", "start"])
     mediaManagerClient = MediaManagerClient()
     mediaManagerClient.set_database(test_database)
     mediaManagerClient.set_collection(test_collection)
@@ -43,4 +46,5 @@ try:
 
     mediaManagerClient.run()
 finally:
+    call(["./server.py", "stop"])
     shutil.rmtree(test_path)

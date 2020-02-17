@@ -34,6 +34,8 @@ with WatcherServer() as watcherServer:
     time.sleep(0.5)
     assert(mycol.count_documents({}) == 2)
 
+    assert(isinstance(mycol.find_one({"name":"test1.mp4"}).get("path"), str))
+
     with open(tmp_folder + "test", 'w') as f:
         f.write("tetasdf")
 
@@ -57,4 +59,12 @@ with WatcherServer() as watcherServer:
     assert(mycol.count_documents({}) == 2)
     assert(mycol.count_documents({"name":"tet2.jpg"}) == 0)
 
+    # test move
+    os.mkdir(tmp_folder + "tmp2/")
+    shutil.move(tmp_folder + "tset3.mp4", tmp_folder + "tmp2/tset3.mp4")
+    assert(mycol.count_documents({"name":"tset3.mp4"}) == 1)
+    assert(mycol.find_one({"name":"tset3.mp4"}).get("path") == tmp_folder + "tmp2/tset3.mp4")
+
     shutil.rmtree(tmp_folder)
+
+print("Watcher: Tests pass")
