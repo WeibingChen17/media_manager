@@ -94,6 +94,9 @@ class Indexer:
             self.col.update(path_query, {'$pull': {"path" : file_path}})
             self.col.delete_many({"path" : []})
             return SUCCEED_CODE
+        elif reason == "modified":
+            # todo
+            pass
         else:
             return FAIL_CODE
 
@@ -128,6 +131,8 @@ class MediaFileEventHandler(RegexMatchingEventHandler):
 
     def on_modified(self, event):
         self.log("file {} is modified".format(event.src_path))
+        if self.indexer:
+            self.indexer.index_file(event.src_path, "modified")
 
 
 class WatcherServer(JsonDataServer):

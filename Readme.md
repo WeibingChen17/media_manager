@@ -1,5 +1,5 @@
 # media manager
-A small manager for media
+A small media manager 
 
 # todo (phase 1)
 * ~~implement player~~
@@ -32,6 +32,9 @@ A small manager for media
 * p1 - use better update command to avoid multiple socket connections
 * p2 - Async promgramming in python
 * p1 - Different client should use different database when they are running - register app\_name and database/collection
+* p0 - when files are moved, it is deleted and then created. md5 is calculated again. move never works
+    * - delete is wrong. Some entry still has the old path
+* p1 - `set watcher folders` needs better design. `Add watch folder` and `remove watch folder` should be enabled
 
 # todo (phase 2)
 * p0 - use javascript to talk to servers
