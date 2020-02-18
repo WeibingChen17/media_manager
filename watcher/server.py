@@ -78,9 +78,6 @@ class Indexer:
                 return SUCCEED_CODE
             res = self.col.delete_one({"path" : file_path})
             return SUCCEED_CODE
-        elif reason == "modified":
-            # todo
-            pass
         else:
             return FAIL_CODE
 
@@ -114,9 +111,10 @@ class MediaFileEventHandler(RegexMatchingEventHandler):
             self.indexer.index_file(event.src_path, "delete")
 
     def on_modified(self, event):
-        self.log("file {} is modified".format(event.src_path))
-        if self.indexer:
-            self.indexer.index_file(event.src_path, "modified")
+        # self.log("file {} is modified".format(event.src_path))
+        # if self.indexer:
+        #     self.indexer.index_file(event.src_path, "modified")
+        pass
 
 
 class WatcherServer(JsonDataServer):

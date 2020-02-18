@@ -126,7 +126,7 @@ class MediaManagerClient(JsonClient):
                 else:
                     ind = _checkIndexRange(play_id, res)
                     if ind != None:
-                        status = self.player.play(res[ind].path[0])
+                        status = self.player.play(res[ind].path)
                         if status != SUCCEED_CODE:
                             print("Player is not able to play. Status = ", status)
                 play_id = input(PLAY_PROMPT)

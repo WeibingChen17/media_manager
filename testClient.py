@@ -6,6 +6,7 @@ import pymongo
 
 from client import MediaManagerClient
 
+test_app_name = "test"
 test_database = "testDatabase"
 test_collection = "media_manager"
 test_path = "/tmp/Test1234/"
@@ -40,9 +41,10 @@ with open(test_path + "test", 'w') as f:
 try:
     call(["./server.py", "start"])
     mediaManagerClient = MediaManagerClient()
+    mediaManagerClient.register_app_name(test_app_name)
     mediaManagerClient.set_database(test_database)
     mediaManagerClient.set_collection(test_collection)
-    mediaManagerClient.set_watch_folders([test_path])
+    mediaManagerClient.add_watch_folder(test_path)
 
     mediaManagerClient.run()
 finally:
