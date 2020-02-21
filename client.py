@@ -9,21 +9,7 @@ from player.client import PlayerClient
 from watcher.client import WatcherClient
 from updater.client import UpdaterClient
 from searcher.client import SearcherClient
-
-SEARCH_PROMPT = "SEARCH : " 
-PLAY_PROMPT = "PLAY : "
-EDIT_PROMPT = "EDIT : "
-
-def _checkIndexRange(ind, lst):
-    try:
-        ind = int(ind)
-    except ValueError as e:
-        print("Index must be integer")
-        return None
-    if ind < 0 or ind > len(lst):
-        print("Index is out of range")
-        return None
-    return ind
+from cmdclient import CmdClient
 
 class MediaManagerClient(JsonClient):
     def __init__(self):
@@ -34,6 +20,7 @@ class MediaManagerClient(JsonClient):
         self.watch_folders = []
         self.database = ""
         self.collection = ""
+        self.cmdClient = None
         self.clients = {
             "Player" : PlayerClient(),
             "Watcher" : WatcherClient(),
@@ -88,86 +75,10 @@ class MediaManagerClient(JsonClient):
         for path in self.watch_folders:
             self.watcher.watch(path)
 
-        query = input(SEARCH_PROMPT)
-        while query:
-            if ":" in query:
-                try:
-                    query = eval("{" + query + "}")
-                except:
-                    query = input(SEARCH_PROMPT)
-            res = self.searcher.search(query)
-            self.show_search_result(res)
-            if res:
-                self.play(res)
-            query = input(SEARCH_PROMPT)
+        self.cmdClient = CmdClient(self.searcher, self.player, self.updater)
 
-    def show_search_result(self, res, extra=None):
-        if extra == "sort size":
-            filter_res = sorted(res, key=lambda entry:entry.size, reverse=True)
-        elif extra == "sort name":
-            filter_res = sorted(res, key=lambda entry:entry.name)
-        elif extra == "only video":
-            filter_res = [entry for entry in res if entry.type and entry.type.startswith("video")]
-        else:
-            filter_res = res
-        for ind, entry in enumerate(filter_res):
-            print("{index:<5} {size:<10} {name} ".format(index=ind, name=entry.name, size=entry.size))
-
-    def play(self, res):
-            play_id = input(PLAY_PROMPT)
-            while play_id:
-                play_id = play_id.strip()
-                if play_id == "show":
-                    self.show_search_result(res)
-                elif play_id in ["sort name", "sort size", "only video"]:
-                    self.show_search_result(res, play_id)
-                elif play_id == "edit":
-                    self.edit(res)
-                else:
-                    ind = _checkIndexRange(play_id, res)
-                    if ind != None:
-                        status = self.player.play(res[ind].path)
-                        if status != SUCCEED_CODE:
-                            print("Player is not able to play. Status = ", status)
-                play_id = input(PLAY_PROMPT)
-
-    def edit(self, res):
-            edit_id = input(EDIT_PROMPT)
-            while edit_id:
-                if edit_id == "show":
-                    self.show_search_result(res) 
-                    edit_id = input(EDIT_PROMPT)
-                    continue
-                ind = _checkIndexRange(edit_id, res)
-                if ind == None:
-                    edit_id = input(EDIT_PROMPT)
-                    continue
-                mediaEntry = res[ind]
-                print("The entry to edit:\n" + str(mediaEntry))
-                entry_id = mediaEntry._id
-                command = input("enter command :")
-                while command:
-                    if command == "delete":
-                        self.updater.delete(entry_id)
-                        print("entry {} is deleted".format(entry_id))
-                    elif command == "show":
-                        mediaEntry = self.searcher.search_by_id(entry_id)[0]
-                        print("Update entry to edit:\n" + str(mediaEntry))
-                    else:
-                        op, field, *values = command.split()
-                        if hasattr(mediaEntry, field):
-                            if (op == "add" or op == "remove") and not isinstance(mediaEntry.__dict__[field], list):
-                                print("Operation is not supported in this field. Use `change` instead")
-                            elif field in ["path", "name", "size", "type", "duration"]:
-                                print("Immutable Field: {}".format(field))
-                            else:
-                                queryList = []
-                                for value in " ".join(values).split(","):
-                                    queryList.append({op : {field : value.strip('"')}})
-                                self.updater.update_all(entry_id, queryList)
-                        else:
-                            print("No such field in MediaEntry")
-                    command = input("enter command :")
-                edit_id = input(EDIT_PROMPT)
-
+        try:
+            self.cmdClient.cmdloop()
+        except KeyboardInterrupt:
+            pass
 

@@ -32,7 +32,7 @@ MEDIA_REGEX = [r".*\.mp4", r".*\.flv", r".*\.webm", r".*\.jpeg", r".*\.gif", r".
 
 FIELDS = {
         "path" : "", 
-        "release_data" : "" , 
+        "release_date" : "" , 
         "actress" : [], 
         "director" : "", 
         "maker" : "", 
