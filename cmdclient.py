@@ -26,12 +26,13 @@ class CmdClient(cmd.Cmd):
         self.player = player
         self.editCmd = EditCmd(searcher, updater)
         self.res = None
+        self.curr_idx = 0
 
     def do_exit(self, line):
         return True
 
     def emptyline(self):
-        return True
+        self.do_show("")
 
     # default to search
     def default(self, line):
@@ -44,24 +45,34 @@ class CmdClient(cmd.Cmd):
                 query = eval("{" + line + "}")
             except:
                 pass
-        self.res = self.searcher.search(query)
+        res = self.searcher.search(query)
+        if not res:
+            print("Search result empty")
+            return False
+        self.res = res
         self._show()
+        if len(self.res) == 1:
+            self.do_play('0')
 
     def _show(self, extra=None):
         if self.res == None:
             return True
         if extra == "sort size":
-            filter_res = sorted(self.res, key=lambda entry:entry.size, reverse=True)
+            self.res = sorted(self.res, key=lambda entry:entry.size, reverse=True)
         elif extra == "sort name":
-            filter_res = sorted(self.res, key=lambda entry:entry.name)
+            self.res = sorted(self.res, key=lambda entry:entry.name)
         elif extra == "only video":
-            filter_res = [entry for entry in self.res if entry.type and entry.type.startswith("video")]
+            self.res = [entry for entry in self.res if entry.type and entry.type.startswith("video")]
         elif extra == "only image":
-            filter_res = [entry for entry in self.res if entry.type and entry.type.startswith("image")]
-        else:
-            filter_res = self.res
-        for ind, entry in enumerate(filter_res):
-            print("{index:<5} {size:<10} {name} ".format(index=ind, name=entry.name, size=entry.size))
+            self.res = [entry for entry in self.res if entry.type and entry.type.startswith("image")]
+        if extra != None:
+            self.curr_idx = 0
+        elif self.curr_idx > len(self.res):
+            self.curr_idx = 0
+        end_idx = min(self.curr_idx + 20, len(self.res))
+        for ind, entry in enumerate(self.res[self.curr_idx:end_idx]):
+            print("{index:<5} {size:<10} {name} ".format(index=ind+self.curr_idx, name=entry.name, size=entry.size))
+        self.curr_idx += 20
 
     def do_show(self, line):
         if len(line) == 0: 
@@ -71,7 +82,7 @@ class CmdClient(cmd.Cmd):
             if ind != None:
                 print(self.res[ind])
 
-    def do_open(self, line):
+    def do_play(self, line):
         ind = _checkIndexRange(line, self.res)
         if ind != None:
             status = self.player.play(self.res[ind].path)
@@ -151,6 +162,7 @@ class EditCmd(cmd.Cmd):
             for value in " ".join(values).split(","):
                 queryList.append({op : {field : value.strip('"')}})
             self.updater.update_all(self.entry_id, queryList)
+        self.do_show("")
 
     # def completedefault(self, text, line, beginidx, endidx):
     #     return ["add", "change", "remove", "delete"]

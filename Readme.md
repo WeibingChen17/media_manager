@@ -36,7 +36,7 @@ A small media manager
     * - ~~delete is wrong. Some entry still has the old path~~
 * p0 - when to watch : when server launches, all must be indexed
 * p1 - `set watcher folders` needs better design. `Add watch folder` and `remove watch folder` should be enabled
-* p0 - Use cmd module
+* p0 - ~~Use cmd module~~
 * p0 - Refractoring player to use mime; remove MEDIA\_SUFFIX
 * p0 - ~~ remove md5; unqiu path and name~~
 
