@@ -6,6 +6,8 @@ LOCALHOST = "127.0.0.1"
 MEDIA_MANAGER_PORT = 31425
 SUCCEED_CODE = {"status" : "succeed"}
 FAIL_CODE = {"status" : "fail"}
+APP_NAME_EXISTED = {"status" : "app name existed"}
+APP_NAME_NONEXISTED = {"status" : "app name not existed"}
 LOG_FORMAT = "{} - {:<50} - {}"
 
 APP_NAME = "media_manager"
@@ -14,7 +16,6 @@ FORMAT = '%(asctime)-15s %(host)-25s %(message)s'
 
 def log_print(host, message):
     logging.info(message, extra={"host": host})
-    # print(host, message)
 
 def debug_logging():
     root = logging.getLogger()
@@ -25,6 +26,8 @@ def debug_logging():
     formatter = logging.Formatter("%(asctime)s - %(message)s")
     handler.setFormatter(formatter)
     root.addHandler(handler)
+
+MONGO_PORT = "mongodb://localhost:27017/"
 
 # (todo) merge these two
 MEDIA_SUFFIX = [".mp4", ".flv", ".webm", ".jpeg", ".gif", ".png", ".jpg"]

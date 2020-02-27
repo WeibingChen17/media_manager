@@ -22,8 +22,7 @@ with WatcherServer() as watcherServer:
 
     watcherClient = WatcherClient(watcherServer)
 
-    watcherClient.set_database("testDatabase")
-    watcherClient.set_collection("media_manager")
+    watcherClient.set_database("testDatabase", "media_manager")
 
     tmp_folder = "/tmp/Test2341/"
     if os.path.exists(tmp_folder):

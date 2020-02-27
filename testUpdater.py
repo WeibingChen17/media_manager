@@ -9,8 +9,7 @@ debug_logging()
 with UpdaterServer() as updaterServer:
 
     updaterClient = UpdaterClient(updaterServer)
-    updaterClient.set_database("testDatabase")
-    updaterClient.set_collection("media_manager")
+    updaterClient.set_database("testDatabase", "media_manager")
 
     myclient = pymongo.MongoClient("mongodb://localhost:27017/")
     mydb = myclient["testDatabase"]

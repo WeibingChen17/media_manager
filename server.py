@@ -1,33 +1,40 @@
 #!/usr/bin/python3 
 
 import os
-import logging
+import sys
 import time
 import socket
-import sys
+import logging
 from subprocess import call
 
+import pymongo
 from daemonize import Daemonize
 
-from shared.constants import LOCALHOST
-from shared.constants import MEDIA_MANAGER_PORT
 from shared.constants import APP_NAME
 from shared.constants import FORMAT
+from shared.constants import LOCALHOST
 from shared.constants import LOG_FILE
-from shared.jsonserver import JsonServer
+from shared.constants import MEDIA_MANAGER_PORT
+from shared.constants import MONGO_PORT
+from shared.constants import SUCCEED_CODE
+from shared.jsonserver import JsonDataServer
 from player.server import PlayerServer
-from updater.server import UpdaterServer
 from searcher.server import SearcherServer
+from updater.server import UpdaterServer
 from watcher.server import WatcherServer
 
 
-class MediaManagerServer(JsonServer):
+class MediaManagerServer(JsonDataServer):
 
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         self.socket.bind((LOCALHOST, MEDIA_MANAGER_PORT))
         self.host, self.port = self.socket.getsockname()
         self.log("Listening on {}:{}".format(self.host, self.port))
+        self.client = pymongo.MongoClient(MONGO_PORT) 
+        self.db = self.client["MediaManager"]
+        self.col = self.db["RegisterApp"]
+        self.log("Connecting to " + MONGO_PORT)
         self.servers = {
                 "Watcher" : WatcherServer(), 
                 "Player" : PlayerServer(),
@@ -45,16 +52,32 @@ class MediaManagerServer(JsonServer):
             server.stop()
         super().stop()
 
-    def dispatch(self, data):
-        res = {"host" : "" , "port" : ""}
-        if data["service"] == "GetServer":
-            server_name = data["server_name"]
+    def dispatch(self, msg):
+        if msg["service"] == "GetServer":
+            res = {"host" : "" , "port" : ""}
+            server_name = msg["server_name"]
             if server_name in self.servers:
                 server = self.servers[server_name]
                 res = {"host" : server.get_host(), 
                         "port" : server.get_port(),
                         }
-        return res
+            return res
+        elif msg["service"] == "GetDatabase":
+            app_name = msg["app_name"]
+            res = {"database" : "", "collection" : ""}
+            entry = self.col.find_one({"app_name" : app_name})
+            if entry == None:
+                return res
+            res["database"] = entry.get("database")
+            res["collection"] = entry.get("collection")
+            return res
+        elif msg["service"] == "SetDatabase":
+            app_name = msg["app_name"]
+            self.col.update_one({"app_name" : app_name}, 
+                    {"$set" : {"database" : msg["database"], "collection" : msg["collection"]}}, upsert=True)
+            self.log("Update database of {}.".format(app_name))
+            res = SUCCEED_CODE
+            return res
 
 def main():
     try:
@@ -67,8 +90,6 @@ def main():
         pass
     except OSError:
         print("Port is used. Manybe a media manager is already running.")
-    finally:
-        mediaManagerServer.stop()
         
 
 if __name__ == '__main__':

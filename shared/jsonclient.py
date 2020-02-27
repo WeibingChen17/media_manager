@@ -29,6 +29,7 @@ class JsonClient:
 
     def _send(self, data, wait_for_replay=True):
         assert(isinstance(data, dict))
+        self._add_context(data)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         self.log("Connecting to server.")
@@ -49,14 +50,22 @@ class JsonClient:
             return json.loads(received_data.decode("utf8"))
         s.close()
 
+    def _add_context(self, data):
+        pass
 
 class JsonDataClient(JsonClient):
+    
+    def __init__(self, json_server=None):
+        super().__init__(json_server)
+        self.db = None
+        self.col = None
 
-    def set_database(self, database):
+    def set_database(self, database, collection):
         assert(isinstance(database, str))
-        return self._send({"service" : "set_database", "database" : database})
-
-    def set_collection(self, collection):
         assert(isinstance(collection, str))
-        return self._send({"service" : "set_collection", "collection" : collection})
+        self.db = database
+        self.col = collection
+
+    def _add_context(self, data):
+        data.update({"database": self.db, "collection": self.col})
 

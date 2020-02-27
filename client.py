@@ -5,6 +5,8 @@ from shared.constants import LOCALHOST
 from shared.constants import MEDIA_MANAGER_PORT
 from shared.constants import SUCCEED_CODE
 from shared.constants import FAIL_CODE
+from shared.constants import APP_NAME_EXISTED
+from shared.constants import APP_NAME_NONEXISTED
 from player.client import PlayerClient
 from watcher.client import WatcherClient
 from updater.client import UpdaterClient
@@ -30,16 +32,30 @@ class MediaManagerClient(JsonClient):
 
     def set_name(self, name):
         self.name = name
+        res = self._send({"service" : "GetDatabase", "app_name" : self.name})
+        database = res["database"]
+        collection = res["collection"]
+        if database != "" and collection != "":
+            self.database = database
+            self.collection = collection
+            return APP_NAME_EXISTED
+        else:
+            return APP_NAME_NONEXISTED
 
-    def set_database(self, database):
+    def set_database(self, database, collection):
         self.database = database
-
-    def set_collection(self, collection):
         self.collection = collection
+        return self._send({"service" : "SetDatabase", "app_name" : self.name, 
+            "database" : self.database, "collection" : self.collection})
 
-    def set_watch_folders(self, watch_folders):
-        assert(isinstance(watch_folders, list))
-        self.watch_folders = watch_folders[:]
+    def add_watch_folder(self, watch_folder, force_scan=False):
+        self.watch_folders.append((watch_folder, force_scan))
+
+    def _scan_watch_folder(self):
+        if not self.watcher or not self.watch_folders:
+            return
+        for path, force_scan in self.watch_folders:
+            self.watcher.watch(path, force_scan)
 
     def _query(self, server_name):
         # exception handling
@@ -56,13 +72,11 @@ class MediaManagerClient(JsonClient):
             client.set_port(res["port"])
 
         if not self.database or not self.collection:
-            raise Exception("Need to set up databse and collection before tun")
+            raise Exception("Need to set up databse and collection before run")
 
         for name, client in self.clients.items():
             if hasattr(client, "set_database"):
-                client.set_database(self.database)
-            if hasattr(client, "set_collection"):
-                client.set_collection(self.collection)
+                client.set_database(self.database, self.collection)
 
 
     def run(self):
@@ -72,10 +86,9 @@ class MediaManagerClient(JsonClient):
         self.updater = self.clients["Updater"]
         self.searcher = self.clients["Searcher"]
 
-        for path in self.watch_folders:
-            self.watcher.watch(path)
+        self._scan_watch_folder()
 
-        self.cmdClient = CmdClient(self.searcher, self.player, self.updater)
+        self.cmdClient = CmdClient(self.name, self.searcher, self.player, self.updater)
 
         try:
             self.cmdClient.cmdloop()

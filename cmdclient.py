@@ -17,11 +17,11 @@ def _checkIndexRange(ind, lst):
     return ind
 
 class CmdClient(cmd.Cmd):
-    intro = "Welcome to MyJav world!"
     prompt = "SEARCH > "
 
-    def __init__(self, searcher=None, player=None, updater=None):
+    def __init__(self, name, searcher=None, player=None, updater=None):
         super().__init__()
+        self.intro = "Welcome to {} world!".format(name)
         self.searcher = searcher
         self.player = player
         self.editCmd = EditCmd(searcher, updater)
@@ -47,7 +47,7 @@ class CmdClient(cmd.Cmd):
                 pass
         res = self.searcher.search(query)
         if not res:
-            print("Search result empty")
+            print("Search result is empty.")
             return False
         self.res = res
         self._show()
@@ -131,7 +131,7 @@ class EditCmd(cmd.Cmd):
     def setMedieEntry(self, mediaEntry):
         self.mediaEntry = mediaEntry
         self.entry_id = self.mediaEntry._id
-        self._show()
+        self.do_show("")
 
     def _verifyField(self, field, op):
         if not hasattr(self.mediaEntry, field):
@@ -178,7 +178,7 @@ class EditCmd(cmd.Cmd):
 
     def do_delete(self, line):
         self.updater.delete(self.entry_id)
-        print("entry {} is deleted".format(entry_id))
+        print("entry {} is deleted".format(self.entry_id))
 
     def complete_add(self, text, line, beginidx, endix):
         return [field for field in self.add_complete if field.startswith(text)]
@@ -191,10 +191,5 @@ class EditCmd(cmd.Cmd):
 
     def do_show(self, line):
         self.mediaEntry = self.searcher.search_by_id(self.entry_id)[0]
-        self._show()
-
-    def _show(self):
         print(self.mediaEntry)
-
-
 

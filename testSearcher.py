@@ -12,8 +12,7 @@ debug_logging()
 with SearcherServer() as searcherServer:
 
     searcherClient = SearcherClient(searcherServer)
-    searcherClient.set_database("testDatabase")
-    searcherClient.set_collection("media_manager")
+    searcherClient.set_database("testDatabase", "media_manager")
 
     myclient = pymongo.MongoClient("mongodb://localhost:27017/")
     mydb = myclient["testDatabase"]

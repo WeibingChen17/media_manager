@@ -17,6 +17,7 @@ from shared.constants import MediaEntry
 from shared.constants import MEDIA_REGEX
 from shared.constants import MEDIA_SUFFIX
 from shared.jsonserver import JsonDataServer
+from shared.constants import log_print
 
 # copied from https://stackoverflow.com/questions/3844430/how-to-get-the-duration-of-a-video-in-python
 def getDuration(filename):
@@ -43,10 +44,9 @@ def getDuration(filename):
 class Indexer:
     def __init__(self, collection):
         self.col = collection
-        self.log = logging.info
 
-    def set_log(self, log):
-        self.log = log
+    def log(self, msg):
+        log_print("Indexer", msg)
 
     def index_file(self, file_path, reason, dest_path=""):
         path_query = {"path" : file_path}
@@ -84,98 +84,89 @@ class Indexer:
 
 class MediaFileEventHandler(RegexMatchingEventHandler):
 
-    def __init__(self):
+    def __init__(self, indexer):
         super().__init__(MEDIA_REGEX)
-        self.indexer = None
-        self.log = logging.info
-
-    def set_log(self, log):
-        self.log = log
-
-    def set_indexer(self, indexer):
         self.indexer = indexer
+        
+    def log(self, msg):
+        log_print("MediaFileEventHandler", msg)
 
     def on_created(self, event):
-        self.log("file {} is created".format(event.src_path))
+        self.log("File {} is created".format(event.src_path))
         if self.indexer:
             self.indexer.index_file(event.src_path, "create")
 
     def on_moved(self, event):
-        self.log("file {} is moved to {}".format(event.src_path, event.dest_path))
+        self.log("File {} is moved to {}".format(event.src_path, event.dest_path))
         if self.indexer:
             self.indexer.index_file(event.src_path, "move", event.dest_path)
 
     def on_deleted(self, event):
-        self.log("file {} is deleted".format(event.src_path))
+        self.log("File {} is deleted".format(event.src_path))
         if self.indexer:
             self.indexer.index_file(event.src_path, "delete")
-
-    def on_modified(self, event):
-        # self.log("file {} is modified".format(event.src_path))
-        # if self.indexer:
-        #     self.indexer.index_file(event.src_path, "modified")
-        pass
 
 
 class WatcherServer(JsonDataServer):
     def __init__(self):
         super().__init__()
         self.watchedFolder = []
-        self.subthreads = []
-        self.indexer = None
-        self.mediaFileEventHandler = MediaFileEventHandler()
-
-    def set_collection(self, collection):
-        res = super().set_collection(collection)
-        if res == SUCCEED_CODE:
-            self.indexer = Indexer(self.col)
-            self.indexer.set_log(self.log)
-            self.mediaFileEventHandler.set_indexer(self.indexer)
-            self.mediaFileEventHandler.set_log(self.log)
-        return res
+        self.subthreads = {}
 
     def get_watched_folder():
         return self.watchedFolder
 
-    def dispatch(self, data):
-        self.predispatch(data)
-        if data["service"] == "watch":
-            return self.watch(data["path"])
+    def dispatch(self, msg):
+        if msg["service"] == "watch":
+            return self.watch(self.getCollection(msg), msg["path"], msg["force_scan"])
+        elif msg["service"] == "unwatch":
+            return self.unwatch(self.getCollection(msg), msg["path"])
         else:
             return FAIL_CODE
 
-    def watch(self, path):
+    def watch(self, col, path, force_scan=False):
+        self.log(path)
         if os.path.exists(path):
-            if path in self.watchedFolder:
-                self.log("{} is already watched".format(path))
-                return SUCCEED_CODE
-            self.watchedFolder.append(path)
+            if force_scan == False and (col, path) in self.watchedFolder:
+                    self.log("{} is already watched in {}".format(path, col))
+                    return SUCCEED_CODE
+            if (col, path) not in self.watchedFolder:
+                self.watchedFolder.append((str(col), path))
 
-            self.log("Watching folder " + path)
-            thread = threading.Thread(target=self.monitor, args=(path,), name=path)
-            self.subthreads.append(thread)
+            self.log("Watching folder {} for {}".format(path, col))
+            thread = threading.Thread(target=self.monitor, args=(col, path,), name=path)
+            self.subthreads.update({(str(col), path) : thread})
             thread.start()
             return SUCCEED_CODE
         else:
             self.log("Could not find path", path)
             return FAIL_CODE
 
-    def index_media_folder(self, folder_path):
-        self.log("Indexing folder " +  folder_path)
-        for dirpath, _, names in os.walk(folder_path):
+    def unwatch(self, col, path):
+        if (col, path) not in self.subthreads:
+            return SUCCEED_CODE
+        try:
+            self.watchedFolder.remove((col, path))
+            thread = self.subthreads[(col, path)]
+            thread.do_run = False
+            observer.join()
+            self.log("Stop watching " + path)
+            return SUCCEED_CODE
+        except:
+            return FAIL_CODE
+
+    def monitor(self, col, path):
+        observer = Observer()
+        indexer = Indexer(col)
+        observer.schedule(MediaFileEventHandler(indexer), path, recursive=True)
+        observer.start()
+        self.log("Indexing folder " +  path)
+        for dirpath, _, names in os.walk(path):
             for name in names:
                 if any([name.endswith(suf) for suf in MEDIA_SUFFIX]):
                     # (todo) deal with failure
                     self.log("Indexing " + name)
-                    self.indexer.index_file(os.path.join(dirpath, name), "create")
-        # assuem happy
-        return SUCCEED_CODE
-
-    def monitor(self, path):
-        observer = Observer()
-        observer.schedule(self.mediaFileEventHandler, path, recursive=True)
-        observer.start()
-        self.index_media_folder(path)
+                    indexer.index_file(os.path.join(dirpath, name), "create")
         t = threading.currentThread();
         while getattr(t, "do_run", True):
             time.sleep(1)

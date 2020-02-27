@@ -5,6 +5,8 @@ from subprocess import call
 import pymongo
 
 from client import MediaManagerClient
+from shared.constants import APP_NAME_EXISTED
+from shared.constants import APP_NAME_NONEXISTED
 
 test_app_name = "test"
 test_database = "testDatabase"
@@ -39,14 +41,14 @@ with open(test_path + "test", 'w') as f:
 
 # run
 try:
-    call(["./server.py", "start"])
     mediaManagerClient = MediaManagerClient()
-    mediaManagerClient.register_app_name(test_app_name)
-    mediaManagerClient.set_database(test_database)
-    mediaManagerClient.set_collection(test_collection)
-    mediaManagerClient.add_watch_folder(test_path)
+    status = mediaManagerClient.set_name(test_app_name)
+    if status == APP_NAME_NONEXISTED:
+        print("setting database")
+        mediaManagerClient.set_database(test_database, test_collection)
+    # forcce to rescan the test folder
+    mediaManagerClient.add_watch_folder(test_path, True)
 
     mediaManagerClient.run()
 finally:
-    call(["./server.py", "stop"])
     shutil.rmtree(test_path)

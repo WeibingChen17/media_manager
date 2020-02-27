@@ -8,9 +8,9 @@ from shared.jsonserver import JsonServer
 
 class PlayerServer(JsonServer):
 
-    def dispatch(self, data):
-        if data["service"] == "play":
-            return self.play(data["path"])
+    def dispatch(self, msg):
+        if msg["service"] == "play":
+            return self.play(msg["path"])
         else:
             return FAIL_CODE
 
