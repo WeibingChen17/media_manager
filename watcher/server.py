@@ -175,7 +175,7 @@ class WatcherServer(JsonDataServer):
         self.log("Stop watching " + path)
 
     def stop(self):
-        for thread in self.subthreads:
+        for thread in self.subthreads.values():
             thread.do_run = False
             thread.join()
             self.log("Watching thread {} stops".format(thread.name))
