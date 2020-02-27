@@ -90,12 +90,19 @@ class CmdClient(cmd.Cmd):
                 print("Player is not able to play. Status = ", status)
 
     def do_edit(self, line):
-        ind = _checkIndexRange(line, self.res)
+        if len(line) == 0 and len(self.res) == 1:
+            ind = 0
+        else:
+            ind = _checkIndexRange(line, self.res)
         if ind != None:
             self.editCmd.setMedieEntry(self.res[ind])
             self.editCmd.cmdloop()
 
     def do_sort(self, line):
+        if len(line) == 0:
+            # todo
+            # self._show("sort rating")
+            pass
         if line == "size":
             self._show("sort size")
         elif line == "name":
