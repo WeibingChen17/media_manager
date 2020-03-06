@@ -83,9 +83,14 @@ def main():
     try:
         logging.basicConfig(format=FORMAT, filename=LOG_FILE, filemode='a+', level=logging.DEBUG)
         with MediaManagerServer() as mediaManagerServer:
+            timeInd = 0
             while True:
                 # Sleep the main thread to reduce cpu usage
                 time.sleep(1000)
+                if timeInd % 600 == 0:
+                    # (todo) database correction
+                    timeInd = 0
+                timeInd += 1
     except KeyboardInterrupt:
         pass
     except OSError:

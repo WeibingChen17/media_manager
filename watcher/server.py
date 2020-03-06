@@ -52,7 +52,7 @@ class Indexer:
         path_query = {"path" : file_path}
         if reason == "create":
             if self.col.count_documents(path_query) > 0:
-                self.log("Ignore an existing file path")
+                # self.log("Ignore an existing file path")
                 return SUCCEED_CODE
             entry = MediaEntry()
             entry.path = file_path
@@ -66,7 +66,7 @@ class Indexer:
             return SUCCEED_CODE
         elif reason == "move":
             if self.col.count_documents(path_query) == 0:
-                self.log("Ignore nonexisting file path")
+                self.log("Ignore nonexisting file path {}".format(path))
                 return "succeed"
             res = self.col.update(path_query, {
                 '$set': {"path" : dest_path, "name" : os.path.basename(dest_path)},
@@ -74,7 +74,7 @@ class Indexer:
             return SUCCEED_CODE
         elif reason == "delete":
             if self.col.count_documents(path_query) == 0:
-                self.log("Ignore nonexisting file path")
+                self.log("Ignore nonexisting file path {}".format(path))
                 return SUCCEED_CODE
             res = self.col.delete_one({"path" : file_path})
             return SUCCEED_CODE
@@ -165,7 +165,7 @@ class WatcherServer(JsonDataServer):
             for name in names:
                 if any([name.endswith(suf) for suf in MEDIA_SUFFIX]):
                     # (todo) deal with failure
-                    self.log("Indexing " + name)
+                    # self.log("Indexing " + name)
                     indexer.index_file(os.path.join(dirpath, name), "create")
         t = threading.currentThread();
         while getattr(t, "do_run", True):

@@ -55,6 +55,7 @@ class MediaManagerClient(JsonClient):
         if not self.watcher or not self.watch_folders:
             return
         for path, force_scan in self.watch_folders:
+            print("Watching {}".format(path))
             self.watcher.watch(path, force_scan)
 
     def _query(self, server_name):

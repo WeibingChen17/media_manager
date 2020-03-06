@@ -30,8 +30,8 @@ def debug_logging():
 MONGO_PORT = "mongodb://localhost:27017/"
 
 # (todo) merge these two
-MEDIA_SUFFIX = [".mp4", ".flv", ".webm", ".jpeg", ".gif", ".png", ".jpg"]
-MEDIA_REGEX = [r".*\.mp4", r".*\.flv", r".*\.webm", r".*\.jpeg", r".*\.gif", r".*\.png", r".*\.jpg"]
+MEDIA_SUFFIX = [".mp4", ".flv", ".webm", ".jpeg", ".gif", ".png", ".jpg", ".avi"]
+MEDIA_REGEX = [r".*\.mp4", r".*\.flv", r".*\.webm", r".*\.jpeg", r".*\.gif", r".*\.png", r".*\.jpg", r".*\.avi"]
 
 FIELDS = {
         "path" : "", 

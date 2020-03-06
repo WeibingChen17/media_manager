@@ -38,12 +38,18 @@ A small media manager
 * p0 - when to watch? : when server launches, all must be indexed
 * p0 - ~~Use cmd module~~
 * p0 - Refractoring player to use mime; remove MEDIA\_SUFFIX
-* p0 - ~~ remove md5; unique path and name~~
+* p0 - ~~remove md5; unique path and name~~
 * p0 - avoid duplicate tag
 * p2 - enable `update all tags using the search query`
 * p2 - creating time?
 * p0 - error message logging
-* ~~p0 - for different client, watcher should write to different database. ~~
+* ~~p0 - for different client, watcher should write to different database.~~
+* p0 - logging file managerment
+* p1 - tag autocompletion
+* p0 - enable delete entry only
+* p0 - reindex entry 
+* p0 - use modified to avoid the too early indexing
+
 
 # todo (phase 2)
 * p0 - use javascript to talk to servers
@@ -63,6 +69,10 @@ A small media manager
 * ~~p0 fix: registerred app database/collection are not updated~~
 * p0 fix: You cannot always open a thread for each folder
 * p1 fix: error message from logging: keyerror: 'host'; reason: logging from other library
+* p0 fix: when file is being download, the indexed info is wrong, e.g., ipx 388
+* p0 fix: when file is being download, multiple entries may be created, e.g., ipz 400
+* p0 fix: search `ipz 400`, could not find ipz400.avi
+    * missing suffix avi
 
 # log
 * [Sat 15 Feb 2020 10:57:13 PM PST] start testing
